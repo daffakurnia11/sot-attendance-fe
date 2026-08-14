@@ -1,5 +1,8 @@
+import { redirect } from "next/navigation";
+
 import { auth } from "@/auth";
 import { LoginView } from "@/components/organisms";
+import { routes } from "@/config/routes";
 import { content } from "@/data";
 import { isDiscordAuthConfigured } from "@/lib/env.server";
 
@@ -11,6 +14,9 @@ type HomePageProps = {
 
 export default async function Home({ searchParams }: HomePageProps) {
   const [session, query] = await Promise.all([auth(), searchParams]);
+  if (session?.user?.member) {
+    redirect(routes.dashboard);
+  }
   const authError =
     query.code === "MEMBER_NOT_REGISTERED" || session?.authErrorCode === "MEMBER_NOT_REGISTERED"
       ? "member-not-registered"
