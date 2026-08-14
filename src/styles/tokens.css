@@ -1,0 +1,13 @@
+:root {
+  --color-background: #070605;
+  --color-background-soft: #100d09;
+  --color-surface: #151008;
+  --color-primary: #f2b63d;
+  --color-primary-bright: #ffd966;
+  --color-primary-muted: #a98245;
+  --color-danger: #d83a2f;
+  --color-foreground: #fff6d6;
+  --color-foreground-muted: #b9ac91;
+  --color-border: rgba(217, 169, 80, 0.24);
+  --font-sans: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+}
