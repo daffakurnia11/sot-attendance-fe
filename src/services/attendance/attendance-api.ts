@@ -18,6 +18,9 @@ const memberRecordSchema = z.object({
 export const attendanceReportSchema = z.object({
   month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
   days_in_month: z.number().int().min(28).max(31),
+  period_start: z.iso.date(),
+  period_end: z.iso.date(),
+  period_dates: z.array(z.iso.date()).min(28).max(31),
   attendance_days: z.array(z.iso.date()),
   total_attended: z.number().int().nonnegative(),
   total_opportunities: z.number().int().nonnegative(),

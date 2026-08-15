@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { fetchSettings, formatIDRInput, normalizeCurrencyInput, settingsSchema, updateSettings } from "@/services/settings";
 
-const valid = { start_attendance: "21:00", end_attendance: "01:00", playtime_threshold: "90m", player_threshold: "15", payment_contract: "8000000", attendance_minimum: "24", attendance_maximum: "30", is_admin: true };
+const valid = { start_attendance: "21:00", end_attendance: "01:00", playtime_threshold: "90m", player_threshold: "15", payment_contract: "8000000", attendance_minimum: "24", attendance_maximum: "30", start_date_contract: "28", is_admin: true };
 
 describe("settings API", () => {
   it("formats IDR input without changing stored digits", () => {
@@ -12,6 +12,10 @@ describe("settings API", () => {
 
   it("rejects inverted attendance day range", () => {
     expect(settingsSchema.safeParse({ ...valid, attendance_minimum: "30", attendance_maximum: "24" }).success).toBe(false);
+  });
+
+  it("rejects invalid contract start date", () => {
+    expect(settingsSchema.safeParse({ ...valid, start_date_contract: "32" }).success).toBe(false);
   });
 
   it("validates loaded settings", async () => {

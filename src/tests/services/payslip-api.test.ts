@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { fetchPayslips } from "@/services/payslip";
 
-const valid = { month: "2026-08", payment_contract: "8000000", attendance_minimum: 24, attendance_maximum: 30, total_players: 1, eligible_players: 1, total_payout: "8000000", players: [{ member_id: 1, username: "delta", display_name: "Delta", character_name: "Kenji", attended_days: 24, eligible: true, payout: "8000000" }] };
+const valid = { month: "2026-08", period_start: "2026-08-28", period_end: "2026-09-27", payment_contract: "8000000", attendance_minimum: 24, attendance_maximum: 30, total_players: 1, eligible_players: 1, total_payout: "8000000", players: [{ member_id: 1, username: "delta", display_name: "Delta", character_name: "Kenji", attended_days: 24, eligible: true, payout: "8000000" }] };
 
 describe("fetchPayslips", () => {
   it("validates the report and forwards month", async () => {

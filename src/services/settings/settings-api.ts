@@ -8,6 +8,7 @@ const settingsShape = {
   payment_contract: z.string().regex(/^[1-9]\d*$/),
   attendance_minimum: z.string().regex(/^([1-9]|[12]\d|3[01])$/),
   attendance_maximum: z.string().regex(/^([1-9]|[12]\d|3[01])$/),
+  start_date_contract: z.string().regex(/^([1-9]|[12]\d|3[01])$/),
 };
 
 export const settingsValuesSchema = z.object(settingsShape).refine((values) => Number(values.attendance_minimum) <= Number(values.attendance_maximum), {

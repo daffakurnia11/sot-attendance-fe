@@ -1,5 +1,6 @@
 export * from "./button";
 export * from "./data-table";
+export * from "./language-switcher";
 export * from "./option-dropdown";
 export * from "./page-header";
 export * from "./section-header";

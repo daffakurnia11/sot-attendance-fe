@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { fetchAttendance, getAttendanceSummary, getLatestAttendanceSummary, getMemberTotalPlaytime, sortAttendanceMembers } from "@/services/attendance";
 
 const valid = {
-  month: "2026-08", days_in_month: 31, attendance_days: ["2026-08-14"],
+  month: "2026-08", days_in_month: 31, period_start: "2026-08-28", period_end: "2026-09-27", period_dates: Array.from({ length: 31 }, (_, index) => new Date(Date.UTC(2026, 7, 28 + index)).toISOString().slice(0, 10)), attendance_days: ["2026-09-14"],
   total_attended: 1, total_opportunities: 2,
   members: [
-    { member_id: 1, username: "delta", display_name: "Delta", character_name: "Kenji", total_attended: 1, records: [{ date: "2026-08-14", is_attended: true, playtime_seconds: 5400 }] },
+    { member_id: 1, username: "delta", display_name: "Delta", character_name: "Kenji", total_attended: 1, records: [{ date: "2026-09-14", is_attended: true, playtime_seconds: 5400 }] },
     { member_id: 2, username: "prince", display_name: "Prince", character_name: "", total_attended: 0, records: [] },
   ],
 };
@@ -50,14 +50,14 @@ describe("getLatestAttendanceSummary", () => {
   it("counts eligible players against latest session participants", () => {
     const report = {
       ...valid,
-      attendance_days: ["2026-08-13", "2026-08-14"],
+      attendance_days: ["2026-09-13", "2026-09-14"],
       members: [
         valid.members[0],
-        { ...valid.members[1], records: [{ date: "2026-08-14", is_attended: false, playtime_seconds: 1200 }] },
+        { ...valid.members[1], records: [{ date: "2026-09-14", is_attended: false, playtime_seconds: 1200 }] },
         { ...valid.members[1], member_id: 3, records: [] },
       ],
     };
-    expect(getLatestAttendanceSummary(report)).toEqual({ date: "2026-08-14", eligible: 1, total: 2, rate: 50 });
+    expect(getLatestAttendanceSummary(report)).toEqual({ date: "2026-09-14", eligible: 1, total: 2, rate: 50 });
   });
 
   it("returns zero summary when no attendance session exists", () => {
@@ -71,7 +71,7 @@ describe("getAttendanceSummary", () => {
       ...valid,
       members: [
         valid.members[0],
-        { ...valid.members[1], records: [{ date: "2026-08-14", is_attended: false, playtime_seconds: 1200 }] },
+        { ...valid.members[1], records: [{ date: "2026-09-14", is_attended: false, playtime_seconds: 1200 }] },
         { ...valid.members[1], member_id: 3, records: [] },
       ],
     };

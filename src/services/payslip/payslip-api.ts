@@ -14,6 +14,8 @@ const payslipPlayerSchema = z.object({
 
 export const payslipReportSchema = z.object({
   month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+  period_start: z.iso.date(),
+  period_end: z.iso.date(),
   payment_contract: rupiahSchema,
   attendance_minimum: z.number().int().min(1).max(31),
   attendance_maximum: z.number().int().min(1).max(31),
