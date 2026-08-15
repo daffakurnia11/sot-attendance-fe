@@ -24,21 +24,21 @@ export function LoginView({
 }: LoginViewProps) {
   return (
     <>
-      <section className="crest-stage relative flex min-h-[360px] flex-col items-center justify-center lg:min-h-[760px]" aria-labelledby="brand-title">
-        <div className="crest-orbit" aria-hidden="true" />
-        <p className="chapter-mark absolute left-0 top-2 hidden text-[11px] font-bold uppercase tracking-[0.34em] text-[var(--color-primary-muted)] sm:block lg:top-8">
+      <section className="relative flex min-h-80 flex-col items-center justify-center after:absolute after:bottom-0 after:h-px after:w-[84%] after:bg-[linear-gradient(90deg,transparent,var(--color-border),transparent)] after:content-[''] sm:min-h-[360px] lg:min-h-[760px] lg:after:right-0 lg:after:bottom-auto lg:after:h-[72%] lg:after:w-px lg:after:bg-[linear-gradient(transparent,var(--color-border),transparent)]" aria-labelledby="brand-title">
+        <div className="absolute aspect-square w-[min(74vw,460px)] rounded-full border border-[var(--color-border)] shadow-[inset_0_0_90px_rgba(242,182,61,.04),0_0_80px_rgba(242,182,61,.05)] before:absolute before:inset-[6%] before:rounded-full before:border before:border-[rgba(217,169,80,.1)] before:content-[''] after:absolute after:inset-[14%] after:rounded-full after:border after:border-[rgba(216,58,47,.12)] after:content-[''] lg:w-[min(70vw,590px)]" aria-hidden="true" />
+        <p className="absolute top-2 left-0 hidden text-xs font-bold tracking-[0.34em] text-[var(--color-primary-muted)] uppercase sm:block lg:top-8">
           {content.auth.chapter}
         </p>
         <Image
           alt="Shade of Triads golden dragon crest"
-          className="crest-image relative z-10 h-auto w-[min(68vw,370px)] object-contain lg:w-[370px]"
+          className="relative z-10 h-auto w-[min(68vw,370px)] object-contain [filter:drop-shadow(0_32px_42px_rgba(0,0,0,.7))_saturate(.9)_contrast(1.04)] lg:w-[370px]"
           height={1230}
           priority
           src="/sot-logo.png"
           width={1105}
         />
-        <div className="brand-lockup relative z-20 mt-4 self-start sm:absolute sm:bottom-4 sm:left-0 sm:mt-0 lg:bottom-10">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.28em] text-[var(--color-danger)]">
+        <div className="relative z-20 mt-4 max-w-[80%] self-start sm:absolute sm:bottom-4 sm:left-0 sm:mt-0 sm:max-w-none lg:bottom-10">
+          <p className="mb-2 text-xs font-black uppercase tracking-[0.28em] text-[var(--color-danger)]">
             {content.auth.community}
           </p>
           <Typography as="h2" id="brand-title" className="text-2xl sm:text-3xl" variant="heading">
@@ -47,14 +47,14 @@ export function LoginView({
         </div>
       </section>
 
-      <section className="login-panel relative mx-auto w-full max-w-[480px] py-10 lg:ml-auto lg:py-0">
-        <div className="panel-index mb-8 flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--color-primary-muted)]">
+      <section className="relative mx-auto w-full max-w-[480px] py-10 before:absolute before:-top-[34px] before:-left-10 before:hidden before:h-[70px] before:w-[70px] before:border-t before:border-l before:border-[var(--color-border)] before:content-[''] sm:before:block lg:ml-auto lg:py-0">
+        <div className="mb-8 flex items-center gap-4 text-xs font-bold tracking-[0.28em] text-[var(--color-primary-muted)] uppercase">
           <span>{content.auth.sectionNumber}</span>
           <span className="h-px flex-1 bg-[var(--color-border)]" />
           <span>{content.auth.sectionLabel}</span>
         </div>
 
-        <div className="login-copy">
+        <div>
           <Typography className="mb-5 inline-flex items-center gap-2 text-xs" variant="eyebrow">
             <LockIcon aria-hidden="true" /> {content.auth.eyebrow}
           </Typography>

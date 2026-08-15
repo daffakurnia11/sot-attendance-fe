@@ -17,11 +17,13 @@ export function AppProvider({ children }: Readonly<{ children: React.ReactNode }
             colorBorder: "#5f4722",
             borderRadius: 8,
             fontFamily: "var(--font-sans)",
+            fontSize: 16,
+            fontSizeSM: 12,
           },
           components: {
             Button: {
               controlHeightLG: 56,
-              fontSizeLG: 15,
+              fontSizeLG: 16,
               fontWeight: 800,
               primaryShadow: "0 14px 36px rgba(242, 182, 61, 0.2)",
             },
