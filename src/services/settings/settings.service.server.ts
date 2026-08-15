@@ -1,15 +1,14 @@
 import "server-only";
 
 import { headers } from "next/headers";
-import { getToken } from "next-auth/jwt";
 
-import { goAPIURL, serverEnv } from "@/lib/env.server";
+import { goAPIURL } from "@/lib/env.server";
+import { getAppAccessToken, requestFromHeaders } from "@/lib/session.server";
 
 import { fetchSettings } from "./settings-api";
 
 export async function loadSettings() {
-  const requestHeaders = await headers();
-  const token = await getToken({ req: new Request("http://localhost/settings", { headers: requestHeaders }), secret: serverEnv.AUTH_SECRET });
-  if (typeof token?.appAccessToken !== "string") return null;
-  return fetchSettings(goAPIURL, token.appAccessToken).catch(() => null);
+  const accessToken = await getAppAccessToken(requestFromHeaders(await headers(), "/settings"));
+  if (!accessToken) return null;
+  return fetchSettings(goAPIURL, accessToken).catch(() => null);
 }

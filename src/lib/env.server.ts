@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { resolveSecureCookies } from "./utils";
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -35,3 +37,10 @@ export const isDiscordAuthConfigured = Boolean(
 );
 
 export const goAPIURL = serverEnv.GO_API_URL ?? "http://127.0.0.1:8080";
+
+// Auth.js prefixes its session cookie with `__Secure-` when the origin is
+// HTTPS. getToken defaults to the unprefixed name and derives its decryption
+// salt from that name, so it silently returns null on an HTTPS deployment
+// unless told which scheme is in use. Mirrors the rule Auth.js applies when it
+// writes the cookie.
+export const useSecureCookies = resolveSecureCookies(serverEnv.AUTH_URL, serverEnv.NODE_ENV);

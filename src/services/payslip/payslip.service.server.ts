@@ -1,15 +1,14 @@
 import "server-only";
 
 import { headers } from "next/headers";
-import { getToken } from "next-auth/jwt";
 
-import { goAPIURL, serverEnv } from "@/lib/env.server";
+import { goAPIURL } from "@/lib/env.server";
+import { getAppAccessToken, requestFromHeaders } from "@/lib/session.server";
 
 import { fetchPayslips } from "./payslip-api";
 
 export async function loadPayslips() {
-  const requestHeaders = await headers();
-  const token = await getToken({ req: new Request("http://localhost/payslip-recap", { headers: requestHeaders }), secret: serverEnv.AUTH_SECRET });
-  if (typeof token?.appAccessToken !== "string") return null;
-  return fetchPayslips(goAPIURL, token.appAccessToken).catch(() => null);
+  const accessToken = await getAppAccessToken(requestFromHeaders(await headers(), "/payslip-recap"));
+  if (!accessToken) return null;
+  return fetchPayslips(goAPIURL, accessToken).catch(() => null);
 }
