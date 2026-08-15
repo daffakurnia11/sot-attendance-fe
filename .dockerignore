@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+.next
+.vercel
+coverage
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+README.md
+AGENTS.md
+CLAUDE.md

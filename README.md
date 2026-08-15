@@ -46,5 +46,36 @@ Discord OAuth exchange happens inside Auth.js server callback. Auth.js forwards 
 
 ```sh
 pnpm lint
+pnpm typecheck
 pnpm test
+pnpm build
 ```
+
+CI runs all four on every pull request. `pnpm build` is part of the gate because a change can pass lint and type-check and still fail to compile.
+
+## Deployment
+
+`.github/workflows/ci.yml` builds a standalone image on every push to `main`, publishes it to `ghcr.io/<owner>/<repo>`, and deploys it over SSH.
+
+The image ships no `NEXT_PUBLIC_*` values, so nothing is inlined at build time. `AUTH_SECRET`, the Discord credentials, and `GO_API_URL` are injected at runtime from `.env.production` on the host and never appear in an image layer.
+
+### Droplet prerequisites
+
+Copy `compose.production.yaml` into the deploy directory and create `.env.production` alongside it from `.env.production.example`. The deploy job refuses to restart anything when that file is missing or when `AUTH_SECRET` or `GO_API_URL` is blank.
+
+### Repository configuration
+
+Create a `production` environment and set these secrets:
+
+| Secret | Purpose |
+| --- | --- |
+| `DO_HOST` | Droplet hostname or IP |
+| `DO_USER` | SSH user |
+| `DO_SSH_PRIVATE_KEY` | SSH private key for that user |
+| `DO_APP_DIR` | Deploy directory holding `compose.production.yaml` and `.env.production` |
+| `GHCR_USERNAME` | GHCR account used by the droplet to pull |
+| `GHCR_TOKEN` | Personal access token with `read:packages` |
+
+Pushing to GHCR uses the built-in `GITHUB_TOKEN`; `GHCR_USERNAME` and `GHCR_TOKEN` are only for the pull side on the droplet.
+
+The deploy pins the exact image digest, writes it to `FRONTEND_IMAGE` in `.env` on the droplet, and then blocks on the container `HEALTHCHECK` (`/api/health`). A crash-looping image fails the deploy instead of reporting success. Roll back by pointing `FRONTEND_IMAGE` at a previous digest and running `docker compose -f compose.production.yaml up -d`.

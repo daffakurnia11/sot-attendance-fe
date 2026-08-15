@@ -1,0 +1,47 @@
+# Production stack for the droplet.
+#
+# Deployed by .github/workflows/ci.yml, which writes the freshly built digest to
+# FRONTEND_IMAGE before running:
+#   docker compose -f compose.production.yaml up -d --no-build
+name: sot-attendance-fe
+
+networks:
+  # The Go API publishes only to the host's loopback, which a container cannot
+  # reach, so GO_API_URL cannot point at 127.0.0.1 from in here. Joining the
+  # backend's compose network instead lets this app address the API by service
+  # name (http://api:8080) over Docker's own networking, with no host firewall
+  # rule and no port exposed beyond loopback.
+  #
+  # Declared external because the backend stack owns it. Consequence: a
+  # `docker compose down` on the backend refuses to remove the network while
+  # this app is attached, which is correct — the dependency is real.
+  backend:
+    external: true
+    name: sot-attendance_default
+
+services:
+  app:
+    image: ${FRONTEND_IMAGE:?FRONTEND_IMAGE required}
+    # AUTH_SECRET, the Discord credentials, and GO_API_URL are runtime-only and
+    # never appear in an image layer.
+    env_file:
+      - .env.production
+    networks:
+      - backend
+    ports:
+      # Fronted by the host reverse proxy, which terminates TLS. Port 3000 on
+      # the host is already taken by another app, hence 3001 by default.
+      - "127.0.0.1:${FRONTEND_PORT:-3001}:3000"
+    restart: always
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+        reservations:
+          memory: 128M
