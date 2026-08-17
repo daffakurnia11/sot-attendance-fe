@@ -6,12 +6,14 @@ import { useRef, useState } from "react";
 import { DataTable, DataTableCell, dataTableRowClassName, OptionDropdown, SectionHeader, StatisticCard } from "@/components/atoms";
 import { DashboardPage } from "@/components/templates";
 import { useI18n } from "@/i18n";
-import type { PayslipReport } from "@/services/payslip";
+import type { PayslipReport, PayslipSort } from "@/services/payslip";
+import { sortPayslipPlayers } from "@/services/payslip";
 
 export function PayslipView({ initialData }: { initialData: PayslipReport | null }) {
   const [report, setReport] = useState(initialData);
   const [query, setQuery] = useState("");
   const [eligibility, setEligibility] = useState<"all" | "eligible" | "ineligible">("all");
+  const [sort, setSort] = useState<PayslipSort>("default");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(!initialData);
   const requestController = useRef<AbortController | null>(null);
@@ -39,15 +41,17 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
   if (!report) return <div className="w-full px-3.5 pt-6 sm:px-6 sm:pt-[30px]"><Alert type="error" showIcon title={t("Payslip data could not be loaded.")} /></div>;
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const players = report.players.filter((player) => {
+  const filtered = report.players.filter((player) => {
     const matchesQuery = !normalizedQuery || [player.character_name, player.display_name, player.username].some((value) => value.toLocaleLowerCase().includes(normalizedQuery));
     const matchesEligibility = eligibility === "all" || (eligibility === "eligible" ? player.eligible : !player.eligible);
     return matchesQuery && matchesEligibility;
   });
+  const players = sortPayslipPlayers(filtered, sort);
   const toolbar = <div className="flex flex-wrap items-center gap-3">
     <label className="sr-only" htmlFor="payslip-search">{t("Search players")}</label>
     <input aria-label={t("Search players...")} className="h-10 min-w-[220px] flex-1 border border-[var(--color-border)] bg-[rgba(255,255,255,.015)] px-3 text-base outline-none placeholder:text-[var(--color-foreground-muted)] focus:border-[var(--color-primary-muted)]" id="payslip-search" onChange={(event) => setQuery(event.target.value)} placeholder={t("Search players...")} type="search" value={query} />
     <OptionDropdown ariaLabel={t("Filter by eligibility")} className="min-w-[154px]" onChange={(value) => setEligibility(value as typeof eligibility)} options={[{ label: t("All eligibility"), value: "all" }, { label: t("Eligible"), value: "eligible" }, { label: t("Not eligible"), value: "ineligible" }]} value={eligibility} />
+    <OptionDropdown ariaLabel={t("Sort payslips")} className="min-w-[176px]" onChange={(value) => setSort(value as PayslipSort)} options={[{ label: t("Default order"), value: "default" }, { label: t("Attendance: highest"), value: "attendance-desc" }, { label: t("Attendance: lowest"), value: "attendance-asc" }, { label: t("Payslip: highest"), value: "payslip-desc" }, { label: t("Payslip: lowest"), value: "payslip-asc" }]} value={sort} />
     <div className="ml-auto flex items-center gap-2"><button aria-label={t("Previous month")} className="grid h-9 w-9 place-items-center border border-[var(--color-border)] text-[var(--color-primary)] disabled:opacity-40" disabled={loading} onClick={() => void changeMonth(-1)} type="button">‹</button><strong className="min-w-[170px] text-center text-sm tracking-[.06em] uppercase">{formatPeriod(report.period_start, report.period_end, locale)}</strong><button aria-label={t("Next month")} className="grid h-9 w-9 place-items-center border border-[var(--color-border)] text-[var(--color-primary)] disabled:opacity-40" disabled={loading} onClick={() => void changeMonth(1)} type="button">›</button></div>
   </div>;
 

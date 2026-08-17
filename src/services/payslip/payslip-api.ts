@@ -26,6 +26,25 @@ export const payslipReportSchema = z.object({
 });
 
 export type PayslipReport = z.infer<typeof payslipReportSchema>;
+export type PayslipSort = "default" | "attendance-desc" | "attendance-asc" | "payslip-desc" | "payslip-asc";
+
+export function sortPayslipPlayers(players: PayslipReport["players"], sort: PayslipSort) {
+  if (sort === "default") return players;
+
+  const direction = sort.endsWith("-desc") ? -1 : 1;
+  // Payouts arrive as digit strings to keep rupiah exact over the wire. They are
+  // bounded by the contract value, so Number stays well inside safe-integer
+  // range and avoids a BigInt comparator.
+  const value = (player: PayslipReport["players"][number]) =>
+    sort.startsWith("payslip") ? Number(player.payout) : player.attended_days;
+
+  return [...players].sort((left, right) => {
+    const difference = value(left) - value(right);
+    // member_id breaks ties in a stable direction so the order does not shuffle
+    // between renders; ineligible players all sit on a payout of 0.
+    return difference === 0 ? left.member_id - right.member_id : difference * direction;
+  });
+}
 
 export async function fetchPayslips(baseURL: string, accessToken: string, month?: string, fetcher: typeof fetch = fetch) {
   const url = new URL("/api/v1/payslips", baseURL);
