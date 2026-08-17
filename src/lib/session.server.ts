@@ -2,6 +2,8 @@ import "server-only";
 
 import { getToken } from "next-auth/jwt";
 
+import { auth } from "@/auth";
+
 import { serverEnv, useSecureCookies } from "./env.server";
 
 /**
@@ -24,4 +26,16 @@ export async function getAppAccessToken(request: Request): Promise<string | null
 /** Builds the request getToken needs from server-component headers. */
 export function requestFromHeaders(requestHeaders: Headers, path: string): Request {
   return new Request(new URL(path, "http://localhost"), { headers: requestHeaders });
+}
+
+/**
+ * Whether the signed-in member holds the administrator role.
+ *
+ * Read from the session, so it can lag a role change by up to the token
+ * lifetime. That is a display concern only: the Go API re-checks the database
+ * on every roster-wide request, so a demoted admin sees the page but no data.
+ */
+export async function isAdminSession(): Promise<boolean> {
+  const session = await auth();
+  return session?.user?.member?.is_admin === true;
 }

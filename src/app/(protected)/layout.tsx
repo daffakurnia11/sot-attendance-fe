@@ -16,6 +16,7 @@ export default async function ProtectedLayout({ children }: Readonly<{ children:
 
   return (
     <DashboardShell
+      isAdmin={member.is_admin === true}
       displayName={member.display_name || member.username}
       username={member.username}
       logoutAction={logout}

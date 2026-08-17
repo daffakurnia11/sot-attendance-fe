@@ -12,6 +12,7 @@ import { cn } from "@/lib";
 
 type DashboardShellProps = Readonly<{
   children: React.ReactNode;
+  isAdmin: boolean;
   displayName: string;
   username: string;
   logoutAction: () => Promise<void>;
@@ -30,6 +31,8 @@ const menuGroups = [
   },
   {
     label: "Attendance and Payslip",
+    // Roster-wide views: every member's attendance and everyone's payout.
+    adminOnly: true,
     items: [
       { href: routes.attendanceRecap, label: "Attendance Recap", icon: "AR" },
       { href: routes.attendanceCalendar, label: "Attendance Calendar", icon: "AC" },
@@ -49,7 +52,7 @@ const menuGroups = [
   },
 ];
 
-export function DashboardShell({ children, displayName, username, logoutAction }: DashboardShellProps) {
+export function DashboardShell({ children, displayName, isAdmin, username, logoutAction }: DashboardShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const { t, translate } = useI18n();
@@ -63,7 +66,7 @@ export function DashboardShell({ children, displayName, username, logoutAction }
         </div>
 
         <nav className="grid content-start gap-6 overflow-y-auto" aria-label={t("Member navigation")}>
-          {menuGroups.map((group) => (
+          {menuGroups.filter((group) => isAdmin || !("adminOnly" in group)).map((group) => (
             <div key={group.label}>
               <p className="mb-2 px-3.5 text-xs leading-none font-extrabold tracking-[.22em] text-[var(--color-primary-muted)] uppercase">
                 {translate(group.label)}

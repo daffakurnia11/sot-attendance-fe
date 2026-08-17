@@ -8,6 +8,10 @@ const memberSchema = z.object({
   username: z.string().min(1),
   display_name: z.string().min(1),
   character_name: z.string(),
+  // Drives which menus render. Authorisation itself lives in the Go API, which
+  // rejects roster-wide reports for non-admins regardless of what the session
+  // claims; this only decides what is worth showing.
+  is_admin: z.boolean().default(false),
 });
 
 const authResponseSchema = z.object({
