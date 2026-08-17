@@ -32,6 +32,7 @@ const menuGroups = [
     label: "Attendance and Payslip",
     items: [
       { href: routes.attendanceRecap, label: "Attendance Recap", icon: "AR" },
+      { href: routes.attendanceCalendar, label: "Attendance Calendar", icon: "AC" },
       { href: routes.payslipRecap, label: "Payslip Recap", icon: "PR" },
     ],
   },

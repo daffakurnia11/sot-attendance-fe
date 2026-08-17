@@ -8,6 +8,7 @@ describe("routes", () => {
     expect(routes.dashboard).toBe("/dashboard");
     expect(routes.myRecords).toBe("/my-records");
     expect(routes.attendanceRecap).toBe("/attendance-recap");
+    expect(routes.attendanceCalendar).toBe("/attendance-calendar");
     expect(routes.payslipRecap).toBe("/payslip-recap");
     expect(routes.players.discord).toBe("/players/discord");
     expect(routes.players.cfx).toBe("/players/cfx");

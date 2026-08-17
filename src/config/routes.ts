@@ -3,6 +3,7 @@ export const routes = {
   dashboard: "/dashboard",
   myRecords: "/my-records",
   attendanceRecap: "/attendance-recap",
+  attendanceCalendar: "/attendance-calendar",
   payslipRecap: "/payslip-recap",
   players: {
     discord: "/players/discord",
