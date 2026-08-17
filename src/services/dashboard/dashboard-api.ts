@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { createRouteFetcher } from "@/lib/route-fetcher";
+
 const playerSchema = z.object({
   member_id: z.number().int().positive(),
   username: z.string(),
@@ -28,6 +30,12 @@ export const dashboardSchema = z.object({
 });
 
 export type DashboardData = z.infer<typeof dashboardSchema>;
+
+/**
+ * Browser-side read of the dashboard through this app's own route handler,
+ * which holds the app token. Validated with the same schema as the server path.
+ */
+export const fetchDashboardRoute = createRouteFetcher("/api/dashboard", dashboardSchema);
 
 export async function fetchDashboard(baseURL: string, accessToken: string, fetcher: typeof fetch = fetch) {
   const response = await fetcher(new URL("/api/v1/dashboard", baseURL), {

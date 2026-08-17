@@ -6,3 +6,4 @@ export * from "./dashboard-view";
 export * from "./member-records-view";
 export * from "./payslip-view";
 export * from "./player-directory";
+export * from "./player-directory-live";

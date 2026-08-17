@@ -3,8 +3,10 @@
 import { Alert } from "antd";
 
 import { SectionHeader, StatisticCard } from "@/components/atoms";
+import { useLiveResource } from "@/hooks/use-live-resource";
 import { useI18n } from "@/i18n";
 import type { DashboardData } from "@/services/dashboard";
+import { fetchDashboardRoute } from "@/services/dashboard";
 
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
@@ -12,8 +14,9 @@ function formatDuration(totalSeconds: number) {
   return `${hours}h ${minutes}m`;
 }
 
-export function DashboardView({ data }: { data: DashboardData | null }) {
+export function DashboardView({ data: initialData }: { data: DashboardData | null }) {
   const { t } = useI18n();
+  const { data, stale } = useLiveResource({ initialData, path: "/api/dashboard", fetcher: fetchDashboardRoute });
   if (!data) return <Alert className="mt-6" type="error" showIcon title={t("Dashboard data could not be loaded. Try refreshing the page.")} />;
 
   const onlineDiscordPlayers = data.discord_players.filter((player) => player.status === "connected");
@@ -31,6 +34,9 @@ export function DashboardView({ data }: { data: DashboardData | null }) {
 
   return (
     <>
+      {/* Refreshing has stopped, so say so rather than presenting frozen
+          numbers as live. */}
+      {stale ? <Alert className="mt-6" type="warning" showIcon title={t("Live updates stopped. Sign in again to resume.")} /> : null}
       <DashboardSection index="01" title="SOT Statistics" items={sotStats} />
       <DashboardSection index="02" title="My Statistics" items={myStats} />
       <section className="mt-[30px]">
