@@ -65,6 +65,194 @@ export function sortAttendanceMembers(members: AttendanceReport["members"], sort
   });
 }
 
+export type AttendanceDayStatus = "good" | "safe" | "danger" | "upcoming";
+
+export type AttendanceDay = Readonly<{
+  date: string;
+  present: number;
+  roster: number;
+  status: AttendanceDayStatus;
+}>;
+
+/**
+ * Turns the monthly report into one entry per day of the contract period,
+ * classified against the configured player threshold.
+ *
+ * `today` is passed in rather than read from the clock so the server and the
+ * browser agree on the boundary, and so the caller decides the timezone. Dates
+ * after it are `upcoming`: a day that has not happened has nobody absent, and
+ * marking it `danger` would report a shortfall nobody could have prevented.
+ */
+export function getAttendanceCalendar(report: AttendanceReport, playerThreshold: number, today: string): AttendanceDay[] {
+  const presentByDate = new Map<string, number>();
+  for (const member of report.members) {
+    for (const record of member.records) {
+      if (record.is_attended) presentByDate.set(record.date, (presentByDate.get(record.date) ?? 0) + 1);
+    }
+  }
+
+  const roster = report.members.length;
+  return report.period_dates.map((date) => {
+    const present = presentByDate.get(date) ?? 0;
+    // ISO dates compare correctly as strings, so no Date parsing is needed.
+    const status: AttendanceDayStatus = date > today
+      ? "upcoming"
+      // Safe clears the threshold, Good sits exactly on it, Danger falls short.
+      : present > playerThreshold ? "safe" : present === playerThreshold ? "good" : "danger";
+    return { date, present, roster, status };
+  });
+}
+
+export type AttendanceDayMember = Readonly<{
+  memberID: number;
+  name: string;
+  username: string;
+  playtimeSeconds: number;
+}>;
+
+export type AttendanceDayDetail = Readonly<{
+  date: string;
+  roster: number;
+  attended: AttendanceDayMember[];
+  missed: AttendanceDayMember[];
+  unrecorded: AttendanceDayMember[];
+}>;
+
+/**
+ * Splits the roster into what happened on one date.
+ *
+ * `missed` and `unrecorded` are kept apart because they mean different things:
+ * a row with is_attended false is a recorded shortfall, while no row at all is
+ * the bot's normal way of saying a member never joined. Merging them would
+ * report the absence of evidence as evidence.
+ */
+export function getAttendanceDayDetail(report: AttendanceReport, date: string): AttendanceDayDetail {
+  const attended: AttendanceDayMember[] = [];
+  const missed: AttendanceDayMember[] = [];
+  const unrecorded: AttendanceDayMember[] = [];
+
+  for (const member of report.members) {
+    const record = member.records.find((candidate) => candidate.date === date);
+    const entry: AttendanceDayMember = {
+      memberID: member.member_id,
+      name: member.character_name || member.display_name,
+      username: member.username,
+      playtimeSeconds: record?.playtime_seconds ?? 0,
+    };
+    if (!record) unrecorded.push(entry);
+    else if (record.is_attended) attended.push(entry);
+    else missed.push(entry);
+  }
+
+  const byName = (left: AttendanceDayMember, right: AttendanceDayMember) =>
+    left.name.localeCompare(right.name) || left.memberID - right.memberID;
+
+  return {
+    date,
+    roster: report.members.length,
+    // Longest session first: on a day under threshold, who actually turned up
+    // and for how long is the question being asked.
+    attended: [...attended].sort((left, right) => right.playtimeSeconds - left.playtimeSeconds || byName(left, right)),
+    missed: [...missed].sort(byName),
+    unrecorded: [...unrecorded].sort(byName),
+  };
+}
+
+export type AttendanceMemberDay = Readonly<{ date: string; playtimeSeconds: number }>;
+
+export type AttendanceMemberDetail = Readonly<{
+  memberID: number;
+  name: string;
+  username: string;
+  attendanceDays: number;
+  totalPlaytimeSeconds: number;
+  attended: AttendanceMemberDay[];
+  missed: AttendanceMemberDay[];
+  unrecorded: AttendanceMemberDay[];
+}>;
+
+/**
+ * One member's period, split the same three ways as a single day.
+ *
+ * Bucketed over `attendance_days` — the dates somebody attended — rather than
+ * every date in the period. A member cannot miss a night nobody played, so
+ * counting the whole period would bury the real misses under future dates and
+ * days the server never opened.
+ */
+export function getAttendanceMemberDetail(report: AttendanceReport, memberID: number): AttendanceMemberDetail | null {
+  const member = report.members.find((candidate) => candidate.member_id === memberID);
+  if (!member) return null;
+
+  const byDate = new Map(member.records.map((record) => [record.date, record]));
+  const attended: AttendanceMemberDay[] = [];
+  const missed: AttendanceMemberDay[] = [];
+  const unrecorded: AttendanceMemberDay[] = [];
+
+  for (const date of [...report.attendance_days].sort()) {
+    const record = byDate.get(date);
+    const day = { date, playtimeSeconds: record?.playtime_seconds ?? 0 };
+    if (!record) unrecorded.push(day);
+    else if (record.is_attended) attended.push(day);
+    else missed.push(day);
+  }
+
+  return {
+    memberID: member.member_id,
+    name: member.character_name || member.display_name,
+    username: member.username,
+    attendanceDays: report.attendance_days.length,
+    totalPlaytimeSeconds: getMemberTotalPlaytime(member),
+    attended,
+    missed,
+    unrecorded,
+  };
+}
+
+/** Monday-first weekday index: Monday is 0, Sunday is 6. */
+export function getMondayIndex(date: string) {
+  return (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
+}
+
+/**
+ * Lays the period out as Monday-to-Sunday weeks, padding with nulls so every
+ * day sits under its own weekday column.
+ *
+ * A contract period starts on whatever day of the week the contract day falls
+ * on, so the first and last weeks are almost always partial. Placement is by
+ * weekday index rather than by counting forward, so a gap in the dates cannot
+ * shift the rest of the grid.
+ */
+export function groupAttendanceWeeks(days: readonly AttendanceDay[]): (AttendanceDay | null)[][] {
+  const weeks: (AttendanceDay | null)[][] = [];
+  let week: (AttendanceDay | null)[] = [];
+
+  for (const day of days) {
+    const index = getMondayIndex(day.date);
+    if (week.length > 0 && index === 0) {
+      weeks.push(pad(week));
+      week = [];
+    }
+    while (week.length < index) week.push(null);
+    week.push(day);
+  }
+  if (week.length > 0) weeks.push(pad(week));
+  return weeks;
+}
+
+function pad(week: (AttendanceDay | null)[]) {
+  while (week.length < 7) week.push(null);
+  return week;
+}
+
+export function getAttendanceCalendarSummary(days: readonly AttendanceDay[]) {
+  return {
+    good: days.filter((day) => day.status === "good").length,
+    safe: days.filter((day) => day.status === "safe").length,
+    danger: days.filter((day) => day.status === "danger").length,
+    upcoming: days.filter((day) => day.status === "upcoming").length,
+  };
+}
+
 export function getMemberTotalPlaytime(member: AttendanceReport["members"][number]) {
   return member.records.reduce((total, record) => total + record.playtime_seconds, 0);
 }
