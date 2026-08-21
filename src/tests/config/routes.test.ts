@@ -10,6 +10,7 @@ describe("routes", () => {
     expect(routes.attendanceRecap).toBe("/attendance-recap");
     expect(routes.attendanceCalendar).toBe("/attendance-calendar");
     expect(routes.payslipRecap).toBe("/payslip-recap");
+    expect(routes.craftingCalculator).toBe("/crafting-calculator");
     expect(routes.players.discord).toBe("/players/discord");
     expect(routes.players.cfx).toBe("/players/cfx");
     expect(routes.settings).toBe("/settings");

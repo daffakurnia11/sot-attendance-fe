@@ -5,6 +5,7 @@ export const routes = {
   attendanceRecap: "/attendance-recap",
   attendanceCalendar: "/attendance-calendar",
   payslipRecap: "/payslip-recap",
+  craftingCalculator: "/crafting-calculator",
   players: {
     discord: "/players/discord",
     cfx: "/players/cfx",

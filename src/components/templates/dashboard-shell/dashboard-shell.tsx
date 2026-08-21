@@ -38,6 +38,10 @@ const menuGroups = [
     ],
   },
   {
+    label: "Business Zone",
+    items: [{ href: routes.craftingCalculator, label: "Crafting Calculator", icon: "CC" }],
+  },
+  {
     label: "Server Logs",
     items: [
       { href: routes.players.discord, label: "Discord Players", icon: "DP" },
