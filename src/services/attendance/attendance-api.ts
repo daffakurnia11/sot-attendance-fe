@@ -63,12 +63,13 @@ export function sortAttendanceMembers(
   sort: AttendanceSort,
   attendanceDays: number,
 ) {
-  if (sort === "default") return members;
+  const effectiveSort = sort === "default" ? "total-desc" : sort;
 
-  const direction = sort.endsWith("-desc") ? -1 : 1;
+  const direction = effectiveSort.endsWith("-desc") ? -1 : 1;
   const value = (member: AttendanceReport["members"][number]) => {
-    if (sort.startsWith("playtime")) return getMemberTotalPlaytime(member);
-    if (sort.startsWith("percentage")) return attendanceDays === 0 ? 0 : (member.total_attended / attendanceDays) * 100;
+    if (effectiveSort.startsWith("playtime")) return getMemberTotalPlaytime(member);
+    if (effectiveSort.startsWith("percentage"))
+      return attendanceDays === 0 ? 0 : (member.total_attended / attendanceDays) * 100;
     return member.total_attended;
   };
 

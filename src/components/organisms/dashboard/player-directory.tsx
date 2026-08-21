@@ -16,11 +16,42 @@ export type DirectoryPlayer = {
   playtimeSeconds?: number;
 };
 
+const statusPriority: Record<DirectoryPlayer["status"], number> = {
+  connected: 0,
+  connecting: 1,
+  offline: 2,
+};
+
+export function sortDirectoryPlayers(
+  players: DirectoryPlayer[],
+  source: "CFX" | "Discord",
+  playtimeSort: "default" | "highest" | "lowest",
+) {
+  if (playtimeSort !== "default") {
+    const direction = playtimeSort === "highest" ? -1 : 1;
+    return [...players].sort((left, right) => {
+      const difference = ((left.playtimeSeconds ?? 0) - (right.playtimeSeconds ?? 0)) * direction;
+      return difference || left.id.localeCompare(right.id, undefined, { numeric: true });
+    });
+  }
+
+  return [...players].sort((left, right) => {
+    if (source === "CFX")
+      return Number(left.id) - Number(right.id) || left.id.localeCompare(right.id, undefined, { numeric: true });
+
+    return (
+      statusPriority[left.status] - statusPriority[right.status] ||
+      left.name.localeCompare(right.name) ||
+      left.id.localeCompare(right.id, undefined, { numeric: true })
+    );
+  });
+}
+
 type PlayerDirectoryProps = {
   available?: boolean;
   eyebrow: string;
   showDiscordControls?: boolean;
-  source: string;
+  source: "CFX" | "Discord";
   players: DirectoryPlayer[];
 };
 
@@ -46,12 +77,7 @@ export function PlayerDirectory({
     : players;
   if (showDiscordControls && status !== "all")
     filteredPlayers = filteredPlayers.filter((player) => player.status === status);
-  if (showDiscordControls && playtimeSort !== "default") {
-    const direction = playtimeSort === "highest" ? -1 : 1;
-    filteredPlayers = [...filteredPlayers].sort(
-      (left, right) => ((left.playtimeSeconds ?? 0) - (right.playtimeSeconds ?? 0)) * direction,
-    );
-  }
+  filteredPlayers = sortDirectoryPlayers(filteredPlayers, source, playtimeSort);
   const columns = [
     { label: "#", className: "w-14" },
     { label: showDiscordControls ? t("Discord Name") : t("Player") },

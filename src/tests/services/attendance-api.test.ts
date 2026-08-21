@@ -61,6 +61,17 @@ describe("fetchAttendance", () => {
 });
 
 describe("sortAttendanceMembers", () => {
+  it("sorts default order by attendance total descending", () => {
+    const members = [
+      valid.members[0],
+      {
+        ...valid.members[1],
+        records: [{ date: "2026-09-14", is_attended: false, playtime_seconds: 10_000 }],
+      },
+    ];
+    expect(sortAttendanceMembers(members, "default", 1).map((member) => member.member_id)).toEqual([1, 2]);
+  });
+
   it("sorts by total without mutating API order", () => {
     const members = valid.members;
     expect(sortAttendanceMembers(members, "total-asc", 1).map((member) => member.member_id)).toEqual([2, 1]);

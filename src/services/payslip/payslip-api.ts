@@ -29,14 +29,14 @@ export type PayslipReport = z.infer<typeof payslipReportSchema>;
 export type PayslipSort = "default" | "attendance-desc" | "attendance-asc" | "payslip-desc" | "payslip-asc";
 
 export function sortPayslipPlayers(players: PayslipReport["players"], sort: PayslipSort) {
-  if (sort === "default") return players;
+  const effectiveSort = sort === "default" ? "attendance-desc" : sort;
 
-  const direction = sort.endsWith("-desc") ? -1 : 1;
+  const direction = effectiveSort.endsWith("-desc") ? -1 : 1;
   // Payouts arrive as digit strings to keep rupiah exact over the wire. They are
   // bounded by the contract value, so Number stays well inside safe-integer
   // range and avoids a BigInt comparator.
   const value = (player: PayslipReport["players"][number]) =>
-    sort.startsWith("payslip") ? Number(player.payout) : player.attended_days;
+    effectiveSort.startsWith("payslip") ? Number(player.payout) : player.attended_days;
 
   return [...players].sort((left, right) => {
     const difference = value(left) - value(right);

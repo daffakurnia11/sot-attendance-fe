@@ -56,8 +56,8 @@ const player = (member_id: number, attended_days: number, payout: string, eligib
 describe("sortPayslipPlayers", () => {
   const players = [player(3, 5, "1210000"), player(1, 19, "4600000"), player(2, 0, "0", false)];
 
-  it("leaves the server order untouched by default", () => {
-    expect(sortPayslipPlayers(players, "default")).toBe(players);
+  it("sorts default order by attendance descending", () => {
+    expect(sortPayslipPlayers(players, "default").map((p) => p.member_id)).toEqual([1, 3, 2]);
   });
 
   it("sorts by attendance in both directions", () => {
