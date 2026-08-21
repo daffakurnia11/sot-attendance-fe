@@ -18,7 +18,10 @@ function safeAuthErrorCode(error: unknown): SafeAuthErrorCode {
 export const { auth, handlers, signIn, signOut } = NextAuth({
   secret: serverEnv.AUTH_SECRET,
   trustHost: true,
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: serverEnv.AUTH_SESSION_MAX_AGE_SECONDS,
+  },
   providers: isDiscordAuthConfigured
     ? [
         Discord({

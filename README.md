@@ -33,10 +33,15 @@ http://localhost:3000/api/auth/callback/discord
 Required environment variables:
 
 - `AUTH_SECRET`
+- `AUTH_SESSION_MAX_AGE_SECONDS` (optional; defaults to 900; keep equal to backend `APP_JWT_TTL`)
 - `AUTH_URL` (`http://localhost:3000` locally; public HTTPS origin in production)
 - `AUTH_DISCORD_ID`
 - `AUTH_DISCORD_SECRET`
 - `GO_API_URL` (server-only Go API origin; `http://127.0.0.1:8080` locally)
+
+Login lifetime is adjustable without rebuilding. Set frontend
+`AUTH_SESSION_MAX_AGE_SECONDS` and backend `APP_JWT_TTL` to equivalent values
+(for example `3600` and `1h`). Effective lifetime is whichever expires first.
 
 Generate `AUTH_SECRET` with `pnpm exec auth secret`.
 
