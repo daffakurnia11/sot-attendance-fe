@@ -46,7 +46,12 @@ export function sortPayslipPlayers(players: PayslipReport["players"], sort: Pays
   });
 }
 
-export async function fetchPayslips(baseURL: string, accessToken: string, month?: string, fetcher: typeof fetch = fetch) {
+export async function fetchPayslips(
+  baseURL: string,
+  accessToken: string,
+  month?: string,
+  fetcher: typeof fetch = fetch,
+) {
   const url = new URL("/api/v1/payslips", baseURL);
   if (month) url.searchParams.set("month", month);
   const response = await fetcher(url, {

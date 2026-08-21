@@ -6,13 +6,18 @@ import { en, id, type MessageKey } from "./messages";
 
 export type Locale = "en" | "id";
 type Variables = Record<string, string | number>;
-type I18nContextValue = { locale: Locale; setLocale: (locale: Locale) => void; t: (key: MessageKey, variables?: Variables) => string; translate: (text: string) => string };
+type I18nContextValue = {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  t: (key: MessageKey, variables?: Variables) => string;
+  translate: (text: string) => string;
+};
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 function interpolate(message: string, variables?: Variables) {
   if (!variables) return message;
-  return message.replace(/\{(\w+)\}/g, (match, key: string) => key in variables ? String(variables[key]) : match);
+  return message.replace(/\{(\w+)\}/g, (match, key: string) => (key in variables ? String(variables[key]) : match));
 }
 
 export function translateMessage(locale: Locale, key: MessageKey, variables?: Variables) {
@@ -35,14 +40,19 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     document.cookie = `sot-locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
   };
 
-  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
-  const value = useMemo<I18nContextValue>(() => ({
-    locale,
-    setLocale,
-    t: (key, variables) => translateMessage(locale, key, variables),
-    translate: (text) => text in en ? (locale === "id" ? id : en)[text as MessageKey] : text,
-  }), [locale]);
+  const value = useMemo<I18nContextValue>(
+    () => ({
+      locale,
+      setLocale,
+      t: (key, variables) => translateMessage(locale, key, variables),
+      translate: (text) => (text in en ? (locale === "id" ? id : en)[text as MessageKey] : text),
+    }),
+    [locale],
+  );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

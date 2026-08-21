@@ -10,7 +10,11 @@ export default async function MyRecordsPage() {
   const records = await loadMemberRecords();
 
   return (
-    <DashboardPage description="Your FiveM activity and attendance history." eyebrow="Personal records" title="My Records">
+    <DashboardPage
+      description="Your FiveM activity and attendance history."
+      eyebrow="Personal records"
+      title="My Records"
+    >
       <MemberRecordsView data={records} />
     </DashboardPage>
   );

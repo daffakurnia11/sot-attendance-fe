@@ -28,7 +28,14 @@ export const attendanceReportSchema = z.object({
 });
 
 export type AttendanceReport = z.infer<typeof attendanceReportSchema>;
-export type AttendanceSort = "default" | "total-desc" | "total-asc" | "percentage-desc" | "percentage-asc" | "playtime-desc" | "playtime-asc";
+export type AttendanceSort =
+  | "default"
+  | "total-desc"
+  | "total-asc"
+  | "percentage-desc"
+  | "percentage-asc"
+  | "playtime-desc"
+  | "playtime-asc";
 
 export function getAttendanceSummary(report: AttendanceReport) {
   const records = report.members.flatMap((member) => member.records);
@@ -42,14 +49,20 @@ export function getLatestAttendanceSummary(report: AttendanceReport) {
   const latestDate = report.attendance_days.at(-1);
   if (!latestDate) return { date: null, eligible: 0, total: 0, rate: 0 };
 
-  const latestRecords = report.members.flatMap((member) => member.records.filter((record) => record.date === latestDate));
+  const latestRecords = report.members.flatMap((member) =>
+    member.records.filter((record) => record.date === latestDate),
+  );
   const eligible = latestRecords.filter((record) => record.is_attended).length;
   const total = latestRecords.length;
 
   return { date: latestDate, eligible, total, rate: total === 0 ? 0 : (eligible / total) * 100 };
 }
 
-export function sortAttendanceMembers(members: AttendanceReport["members"], sort: AttendanceSort, attendanceDays: number) {
+export function sortAttendanceMembers(
+  members: AttendanceReport["members"],
+  sort: AttendanceSort,
+  attendanceDays: number,
+) {
   if (sort === "default") return members;
 
   const direction = sort.endsWith("-desc") ? -1 : 1;
@@ -83,7 +96,11 @@ export type AttendanceDay = Readonly<{
  * after it are `upcoming`: a day that has not happened has nobody absent, and
  * marking it `danger` would report a shortfall nobody could have prevented.
  */
-export function getAttendanceCalendar(report: AttendanceReport, playerThreshold: number, today: string): AttendanceDay[] {
+export function getAttendanceCalendar(
+  report: AttendanceReport,
+  playerThreshold: number,
+  today: string,
+): AttendanceDay[] {
   const presentByDate = new Map<string, number>();
   for (const member of report.members) {
     for (const record of member.records) {
@@ -95,10 +112,15 @@ export function getAttendanceCalendar(report: AttendanceReport, playerThreshold:
   return report.period_dates.map((date) => {
     const present = presentByDate.get(date) ?? 0;
     // ISO dates compare correctly as strings, so no Date parsing is needed.
-    const status: AttendanceDayStatus = date > today
-      ? "upcoming"
-      // Safe clears the threshold, Good sits exactly on it, Danger falls short.
-      : present > playerThreshold ? "safe" : present === playerThreshold ? "good" : "danger";
+    const status: AttendanceDayStatus =
+      date > today
+        ? "upcoming"
+        : // Safe clears the threshold, Good sits exactly on it, Danger falls short.
+          present > playerThreshold
+          ? "safe"
+          : present === playerThreshold
+            ? "good"
+            : "danger";
     return { date, present, roster, status };
   });
 }
@@ -257,7 +279,13 @@ export function getMemberTotalPlaytime(member: AttendanceReport["members"][numbe
   return member.records.reduce((total, record) => total + record.playtime_seconds, 0);
 }
 
-export async function fetchAttendance(baseURL: string, accessToken: string, month?: string, fetcher: typeof fetch = fetch, personal = false) {
+export async function fetchAttendance(
+  baseURL: string,
+  accessToken: string,
+  month?: string,
+  fetcher: typeof fetch = fetch,
+  personal = false,
+) {
   const url = new URL(personal ? "/api/v1/attendance/me" : "/api/v1/attendance", baseURL);
   if (month) url.searchParams.set("month", month);
   const response = await fetcher(url, {

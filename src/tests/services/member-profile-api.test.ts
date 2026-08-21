@@ -10,6 +10,8 @@ describe("member profile API", () => {
   });
   it("updates authenticated profile contract", async () => {
     const fetcher = async (_input: RequestInfo | URL, init?: RequestInit) => new Response(init?.body, { status: 200 });
-    await expect(updateMemberProfile("http://api.test", "token", { character_name: "Kenji" }, fetcher as typeof fetch)).resolves.toEqual({ character_name: "Kenji" });
+    await expect(
+      updateMemberProfile("http://api.test", "token", { character_name: "Kenji" }, fetcher as typeof fetch),
+    ).resolves.toEqual({ character_name: "Kenji" });
   });
 });

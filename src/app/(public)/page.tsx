@@ -28,11 +28,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     <LoginView
       authError={authError}
       discordConfigured={isDiscordAuthConfigured}
-      memberName={
-        session?.user?.member
-          ? (session.user.name ?? content.auth.fallbackMemberName)
-          : null
-      }
+      memberName={session?.user?.member ? (session.user.name ?? content.auth.fallbackMemberName) : null}
       signInAction={signInWithDiscord}
       signOutAction={signOutFromDiscord}
     />

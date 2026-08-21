@@ -12,6 +12,9 @@ export async function PATCH(request: Request) {
   try {
     return NextResponse.json(await updateSettings(goAPIURL, accessToken, parsed.data));
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Settings unavailable" }, { status: 502 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Settings unavailable" },
+      { status: 502 },
+    );
   }
 }

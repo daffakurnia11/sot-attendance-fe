@@ -17,19 +17,19 @@ type LoginViewProps = {
   signOutAction: () => Promise<void>;
 };
 
-export function LoginView({
-  authError,
-  discordConfigured,
-  memberName,
-  signInAction,
-  signOutAction,
-}: LoginViewProps) {
+export function LoginView({ authError, discordConfigured, memberName, signInAction, signOutAction }: LoginViewProps) {
   const { t } = useI18n();
   return (
     <>
       <LanguageSwitcher className="fixed top-4 right-4 z-30" />
-      <section className="relative flex min-h-80 flex-col items-center justify-center after:absolute after:bottom-0 after:h-px after:w-[84%] after:bg-[linear-gradient(90deg,transparent,var(--color-border),transparent)] after:content-[''] sm:min-h-[360px] lg:min-h-[760px] lg:after:right-0 lg:after:bottom-auto lg:after:h-[72%] lg:after:w-px lg:after:bg-[linear-gradient(transparent,var(--color-border),transparent)]" aria-labelledby="brand-title">
-        <div className="absolute aspect-square w-[min(74vw,460px)] rounded-full border border-[var(--color-border)] shadow-[inset_0_0_90px_rgba(242,182,61,.04),0_0_80px_rgba(242,182,61,.05)] before:absolute before:inset-[6%] before:rounded-full before:border before:border-[rgba(217,169,80,.1)] before:content-[''] after:absolute after:inset-[14%] after:rounded-full after:border after:border-[rgba(216,58,47,.12)] after:content-[''] lg:w-[min(70vw,590px)]" aria-hidden="true" />
+      <section
+        className="relative flex min-h-80 flex-col items-center justify-center after:absolute after:bottom-0 after:h-px after:w-[84%] after:bg-[linear-gradient(90deg,transparent,var(--color-border),transparent)] after:content-[''] sm:min-h-[360px] lg:min-h-[760px] lg:after:right-0 lg:after:bottom-auto lg:after:h-[72%] lg:after:w-px lg:after:bg-[linear-gradient(transparent,var(--color-border),transparent)]"
+        aria-labelledby="brand-title"
+      >
+        <div
+          className="absolute aspect-square w-[min(74vw,460px)] rounded-full border border-[var(--color-border)] shadow-[inset_0_0_90px_rgba(242,182,61,.04),0_0_80px_rgba(242,182,61,.05)] before:absolute before:inset-[6%] before:rounded-full before:border before:border-[rgba(217,169,80,.1)] before:content-[''] after:absolute after:inset-[14%] after:rounded-full after:border after:border-[rgba(216,58,47,.12)] after:content-[''] lg:w-[min(70vw,590px)]"
+          aria-hidden="true"
+        />
         <p className="absolute top-2 left-0 hidden text-xs font-bold tracking-[0.34em] text-[var(--color-primary-muted)] uppercase sm:block lg:top-8">
           {t("SOT / Member system")}
         </p>
@@ -78,7 +78,9 @@ export function LoginView({
             <div>
               <div className="mb-5 flex items-center gap-3 text-sm text-[var(--color-foreground)]">
                 <VerifiedIcon className="text-[var(--color-primary)]" aria-hidden="true" />
-                <span>{t("Connected as")} <strong>{memberName}</strong></span>
+                <span>
+                  {t("Connected as")} <strong>{memberName}</strong>
+                </span>
               </div>
               <form action={signOutAction}>
                 <AuthSubmitButton mode="sign-out" />

@@ -31,15 +31,10 @@ describe("exchangeDiscordToken", () => {
 
   it("preserves safe backend error code without response message", async () => {
     const fetcher = vi.fn(async () =>
-      Response.json(
-        { error: { code: "MEMBER_NOT_REGISTERED", message: "internal detail" } },
-        { status: 403 },
-      ),
+      Response.json({ error: { code: "MEMBER_NOT_REGISTERED", message: "internal detail" } }, { status: 403 }),
     ) as unknown as typeof fetch;
 
-    await expect(
-      exchangeDiscordToken("http://api:8080", "discord-secret", fetcher),
-    ).rejects.toMatchObject({
+    await expect(exchangeDiscordToken("http://api:8080", "discord-secret", fetcher)).rejects.toMatchObject({
       code: "MEMBER_NOT_REGISTERED",
       status: 403,
       message: "MEMBER_NOT_REGISTERED",
@@ -49,9 +44,10 @@ describe("exchangeDiscordToken", () => {
   it("rejects malformed success responses", async () => {
     const fetcher = vi.fn(async () => Response.json({ access_token: "token" })) as unknown as typeof fetch;
 
-    await expect(
-      exchangeDiscordToken("http://api:8080", "discord-secret", fetcher),
-    ).rejects.toMatchObject({ code: "INVALID_BACKEND_RESPONSE", status: 502 });
+    await expect(exchangeDiscordToken("http://api:8080", "discord-secret", fetcher)).rejects.toMatchObject({
+      code: "INVALID_BACKEND_RESPONSE",
+      status: 502,
+    });
   });
 
   it("maps network failures without leaking transport errors", async () => {
@@ -59,8 +55,9 @@ describe("exchangeDiscordToken", () => {
       throw new Error("connect ECONNREFUSED secret-host");
     }) as unknown as typeof fetch;
 
-    await expect(
-      exchangeDiscordToken("http://api:8080", "discord-secret", fetcher),
-    ).rejects.toMatchObject({ code: "BACKEND_UNAVAILABLE", status: 503 });
+    await expect(exchangeDiscordToken("http://api:8080", "discord-secret", fetcher)).rejects.toMatchObject({
+      code: "BACKEND_UNAVAILABLE",
+      status: 503,
+    });
   });
 });

@@ -1,13 +1,40 @@
 import { describe, expect, it } from "vitest";
 
 import type { AttendanceDay, AttendanceReport } from "@/services/attendance";
-import { fetchAttendance, getAttendanceCalendar, getAttendanceCalendarSummary, getAttendanceDayDetail, getAttendanceMemberDetail, getAttendanceSummary, getLatestAttendanceSummary, getMemberTotalPlaytime, getMondayIndex, groupAttendanceWeeks, sortAttendanceMembers } from "@/services/attendance";
+import {
+  fetchAttendance,
+  getAttendanceCalendar,
+  getAttendanceCalendarSummary,
+  getAttendanceDayDetail,
+  getAttendanceMemberDetail,
+  getAttendanceSummary,
+  getLatestAttendanceSummary,
+  getMemberTotalPlaytime,
+  getMondayIndex,
+  groupAttendanceWeeks,
+  sortAttendanceMembers,
+} from "@/services/attendance";
 
 const valid = {
-  month: "2026-08", days_in_month: 31, period_start: "2026-08-28", period_end: "2026-09-27", period_dates: Array.from({ length: 31 }, (_, index) => new Date(Date.UTC(2026, 7, 28 + index)).toISOString().slice(0, 10)), attendance_days: ["2026-09-14"],
-  total_attended: 1, total_opportunities: 2,
+  month: "2026-08",
+  days_in_month: 31,
+  period_start: "2026-08-28",
+  period_end: "2026-09-27",
+  period_dates: Array.from({ length: 31 }, (_, index) =>
+    new Date(Date.UTC(2026, 7, 28 + index)).toISOString().slice(0, 10),
+  ),
+  attendance_days: ["2026-09-14"],
+  total_attended: 1,
+  total_opportunities: 2,
   members: [
-    { member_id: 1, username: "delta", display_name: "Delta", character_name: "Kenji", total_attended: 1, records: [{ date: "2026-09-14", is_attended: true, playtime_seconds: 5400 }] },
+    {
+      member_id: 1,
+      username: "delta",
+      display_name: "Delta",
+      character_name: "Kenji",
+      total_attended: 1,
+      records: [{ date: "2026-09-14", is_attended: true, playtime_seconds: 5400 }],
+    },
     { member_id: 2, username: "prince", display_name: "Prince", character_name: "", total_attended: 0, records: [] },
   ],
 };
@@ -19,13 +46,17 @@ describe("fetchAttendance", () => {
       requestedURL = String(input);
       return new Response(JSON.stringify(valid), { status: 200 });
     };
-    await expect(fetchAttendance("http://api.test", "token", "2026-08", fetcher as typeof fetch)).resolves.toEqual(valid);
+    await expect(fetchAttendance("http://api.test", "token", "2026-08", fetcher as typeof fetch)).resolves.toEqual(
+      valid,
+    );
     expect(requestedURL).toBe("http://api.test/api/v1/attendance?month=2026-08");
   });
 
   it("rejects malformed report", async () => {
     const fetcher = async () => new Response(JSON.stringify({ ...valid, month: "August" }), { status: 200 });
-    await expect(fetchAttendance("http://api.test", "token", undefined, fetcher as typeof fetch)).rejects.toThrow("invalid data");
+    await expect(fetchAttendance("http://api.test", "token", undefined, fetcher as typeof fetch)).rejects.toThrow(
+      "invalid data",
+    );
   });
 });
 
@@ -62,7 +93,12 @@ describe("getLatestAttendanceSummary", () => {
   });
 
   it("returns zero summary when no attendance session exists", () => {
-    expect(getLatestAttendanceSummary({ ...valid, attendance_days: [] })).toEqual({ date: null, eligible: 0, total: 0, rate: 0 });
+    expect(getLatestAttendanceSummary({ ...valid, attendance_days: [] })).toEqual({
+      date: null,
+      eligible: 0,
+      total: 0,
+      rate: 0,
+    });
   });
 });
 
@@ -85,14 +121,28 @@ describe("getAttendanceCalendar", () => {
     ...valid,
     period_dates: ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04"],
     members: [
-      { member_id: 1, username: "a", display_name: "A", character_name: "A", total_attended: 2, records: [
-        { date: "2026-08-01", is_attended: true, playtime_seconds: 3600 },
-        { date: "2026-08-02", is_attended: true, playtime_seconds: 3600 },
-      ] },
-      { member_id: 2, username: "b", display_name: "B", character_name: "B", total_attended: 1, records: [
-        { date: "2026-08-01", is_attended: true, playtime_seconds: 3600 },
-        { date: "2026-08-02", is_attended: false, playtime_seconds: 0 },
-      ] },
+      {
+        member_id: 1,
+        username: "a",
+        display_name: "A",
+        character_name: "A",
+        total_attended: 2,
+        records: [
+          { date: "2026-08-01", is_attended: true, playtime_seconds: 3600 },
+          { date: "2026-08-02", is_attended: true, playtime_seconds: 3600 },
+        ],
+      },
+      {
+        member_id: 2,
+        username: "b",
+        display_name: "B",
+        character_name: "B",
+        total_attended: 1,
+        records: [
+          { date: "2026-08-01", is_attended: true, playtime_seconds: 3600 },
+          { date: "2026-08-02", is_attended: false, playtime_seconds: 0 },
+        ],
+      },
       { member_id: 3, username: "c", display_name: "C", character_name: "C", total_attended: 0, records: [] },
     ],
   } as unknown as AttendanceReport;
@@ -148,15 +198,39 @@ describe("groupAttendanceWeeks", () => {
     const weeks = groupAttendanceWeeks(dates.map(dayAt));
     expect(weeks).toHaveLength(2);
     // Saturday and Sunday close the first row; Monday opens the second.
-    expect(weeks[0].map((day) => day?.date ?? null)).toEqual([null, null, null, null, null, "2026-08-01", "2026-08-02"]);
-    expect(weeks[1].map((day) => day?.date ?? null)).toEqual(["2026-08-03", "2026-08-04", null, null, null, null, null]);
+    expect(weeks[0].map((day) => day?.date ?? null)).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+      "2026-08-01",
+      "2026-08-02",
+    ]);
+    expect(weeks[1].map((day) => day?.date ?? null)).toEqual([
+      "2026-08-03",
+      "2026-08-04",
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
     expect(weeks.every((week) => week.length === 7)).toBe(true);
   });
 
   it("keeps alignment when a date is missing rather than shifting the rest", () => {
     // Wednesday absent: Thursday must stay in the Thursday column.
     const weeks = groupAttendanceWeeks(["2026-08-04", "2026-08-06"].map(dayAt));
-    expect(weeks[0].map((day) => day?.date ?? null)).toEqual([null, "2026-08-04", null, "2026-08-06", null, null, null]);
+    expect(weeks[0].map((day) => day?.date ?? null)).toEqual([
+      null,
+      "2026-08-04",
+      null,
+      "2026-08-06",
+      null,
+      null,
+      null,
+    ]);
   });
 
   it("returns nothing for an empty period", () => {
@@ -168,13 +242,38 @@ describe("getAttendanceDayDetail", () => {
   const report = {
     ...valid,
     members: [
-      { member_id: 1, username: "short", display_name: "Short", character_name: "Short Session", total_attended: 1,
-        records: [{ date: "2026-08-05", is_attended: true, playtime_seconds: 3600 }] },
-      { member_id: 2, username: "long", display_name: "Long", character_name: "Long Session", total_attended: 1,
-        records: [{ date: "2026-08-05", is_attended: true, playtime_seconds: 10800 }] },
-      { member_id: 3, username: "missed", display_name: "Missed", character_name: "Recorded Miss", total_attended: 0,
-        records: [{ date: "2026-08-05", is_attended: false, playtime_seconds: 120 }] },
-      { member_id: 4, username: "absent", display_name: "Fallback Name", character_name: "", total_attended: 0, records: [] },
+      {
+        member_id: 1,
+        username: "short",
+        display_name: "Short",
+        character_name: "Short Session",
+        total_attended: 1,
+        records: [{ date: "2026-08-05", is_attended: true, playtime_seconds: 3600 }],
+      },
+      {
+        member_id: 2,
+        username: "long",
+        display_name: "Long",
+        character_name: "Long Session",
+        total_attended: 1,
+        records: [{ date: "2026-08-05", is_attended: true, playtime_seconds: 10800 }],
+      },
+      {
+        member_id: 3,
+        username: "missed",
+        display_name: "Missed",
+        character_name: "Recorded Miss",
+        total_attended: 0,
+        records: [{ date: "2026-08-05", is_attended: false, playtime_seconds: 120 }],
+      },
+      {
+        member_id: 4,
+        username: "absent",
+        display_name: "Fallback Name",
+        character_name: "",
+        total_attended: 0,
+        records: [],
+      },
     ],
   } as unknown as AttendanceReport;
 
@@ -188,7 +287,9 @@ describe("getAttendanceDayDetail", () => {
 
   it("orders those who attended by longest session", () => {
     // The question on a thin day is who actually showed up and for how long.
-    expect(getAttendanceDayDetail(report, "2026-08-05").attended.map((member) => member.playtimeSeconds)).toEqual([10800, 3600]);
+    expect(getAttendanceDayDetail(report, "2026-08-05").attended.map((member) => member.playtimeSeconds)).toEqual([
+      10800, 3600,
+    ]);
   });
 
   it("falls back to the Discord name when no character name is set", () => {
@@ -209,11 +310,25 @@ describe("getAttendanceMemberDetail", () => {
     attendance_days: ["2026-08-04", "2026-08-05", "2026-08-06"],
     period_dates: ["2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"],
     members: [
-      { member_id: 7, username: "seven", display_name: "Seven", character_name: "Char Seven", total_attended: 1, records: [
-        { date: "2026-08-05", is_attended: true, playtime_seconds: 5400 },
-        { date: "2026-08-06", is_attended: false, playtime_seconds: 60 },
-      ] },
-      { member_id: 8, username: "eight", display_name: "Discord Eight", character_name: "", total_attended: 0, records: [] },
+      {
+        member_id: 7,
+        username: "seven",
+        display_name: "Seven",
+        character_name: "Char Seven",
+        total_attended: 1,
+        records: [
+          { date: "2026-08-05", is_attended: true, playtime_seconds: 5400 },
+          { date: "2026-08-06", is_attended: false, playtime_seconds: 60 },
+        ],
+      },
+      {
+        member_id: 8,
+        username: "eight",
+        display_name: "Discord Eight",
+        character_name: "",
+        total_attended: 0,
+        records: [],
+      },
     ],
   } as unknown as AttendanceReport;
 

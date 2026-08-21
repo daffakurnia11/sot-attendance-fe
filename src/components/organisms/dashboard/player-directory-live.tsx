@@ -23,9 +23,16 @@ type Props = Readonly<{
 export function PlayerDirectoryLive({ eyebrow, initialData, source }: Props) {
   const { data } = useLiveResource({ initialData, path: "/api/dashboard", fetcher: fetchDashboardRoute });
 
-  return source === "CFX"
-    ? <PlayerDirectory available={data?.cfx_available ?? false} eyebrow={eyebrow} players={toCFXRows(data)} source="CFX" />
-    : <PlayerDirectory eyebrow={eyebrow} players={toDiscordRows(data)} showDiscordControls source="Discord" />;
+  return source === "CFX" ? (
+    <PlayerDirectory
+      available={data?.cfx_available ?? false}
+      eyebrow={eyebrow}
+      players={toCFXRows(data)}
+      source="CFX"
+    />
+  ) : (
+    <PlayerDirectory eyebrow={eyebrow} players={toDiscordRows(data)} showDiscordControls source="Discord" />
+  );
 }
 
 function toCFXRows(data: DashboardData | null): DirectoryPlayer[] {

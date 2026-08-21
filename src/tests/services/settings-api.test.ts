@@ -1,8 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { fetchSettings, formatIDRInput, normalizeCurrencyInput, settingsSchema, updateSettings } from "@/services/settings";
+import {
+  fetchSettings,
+  formatIDRInput,
+  normalizeCurrencyInput,
+  settingsSchema,
+  updateSettings,
+} from "@/services/settings";
 
-const valid = { start_attendance: "21:00", end_attendance: "01:00", playtime_threshold: "90m", player_threshold: "15", payment_contract: "8000000", attendance_minimum: "24", attendance_maximum: "30", start_date_contract: "28", is_admin: true };
+const valid = {
+  start_attendance: "21:00",
+  end_attendance: "01:00",
+  playtime_threshold: "90m",
+  player_threshold: "15",
+  payment_contract: "8000000",
+  attendance_minimum: "24",
+  attendance_maximum: "30",
+  start_date_contract: "28",
+  is_admin: true,
+};
 
 describe("settings API", () => {
   it("formats IDR input without changing stored digits", () => {
@@ -11,7 +27,9 @@ describe("settings API", () => {
   });
 
   it("rejects inverted attendance day range", () => {
-    expect(settingsSchema.safeParse({ ...valid, attendance_minimum: "30", attendance_maximum: "24" }).success).toBe(false);
+    expect(settingsSchema.safeParse({ ...valid, attendance_minimum: "30", attendance_maximum: "24" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects invalid contract start date", () => {
@@ -30,7 +48,10 @@ describe("settings API", () => {
     };
     await expect(updateSettings("http://api.test", "token", valid, success as typeof fetch)).resolves.toEqual(valid);
 
-    const failure = async () => new Response(JSON.stringify({ error: { message: "times must differ" } }), { status: 422 });
-    await expect(updateSettings("http://api.test", "token", valid, failure as typeof fetch)).rejects.toThrow("times must differ");
+    const failure = async () =>
+      new Response(JSON.stringify({ error: { message: "times must differ" } }), { status: 422 });
+    await expect(updateSettings("http://api.test", "token", valid, failure as typeof fetch)).rejects.toThrow(
+      "times must differ",
+    );
   });
 });

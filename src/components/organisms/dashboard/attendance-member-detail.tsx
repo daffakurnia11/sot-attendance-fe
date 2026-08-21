@@ -29,13 +29,21 @@ export function AttendanceMemberDetail({ memberID, onClose, report }: Props) {
     // Playtime is shown for a recorded miss because the row holds a real
     // session that fell short, which is the useful part. Unrecorded has no row
     // at all, so its zero would be an invention.
-    { key: "unrecorded", accent: "var(--color-foreground-muted)", label: t("Not Recorded"), members: detail.unrecorded, showPlaytime: false },
+    {
+      key: "unrecorded",
+      accent: "var(--color-foreground-muted)",
+      label: t("Not Recorded"),
+      members: detail.unrecorded,
+      showPlaytime: false,
+    },
   ];
 
   return (
     <Modal centered footer={null} onCancel={onClose} open title={detail.name} width={640}>
       <p className="text-sm text-[var(--color-foreground-muted)]">
-        @{detail.username} · {t("{attended} of {days} attendance days", { attended: detail.attended.length, days: detail.attendanceDays })} · {rate}% · {formatDuration(detail.totalPlaytimeSeconds)}
+        @{detail.username} ·{" "}
+        {t("{attended} of {days} attendance days", { attended: detail.attended.length, days: detail.attendanceDays })} ·{" "}
+        {rate}% · {formatDuration(detail.totalPlaytimeSeconds)}
       </p>
       <Tabs
         defaultActiveKey="attended"
@@ -43,27 +51,56 @@ export function AttendanceMemberDetail({ memberID, onClose, report }: Props) {
           key: group.key,
           label: (
             <span className="flex items-center gap-2 text-xs font-extrabold tracking-[.1em] uppercase">
-              <i className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: group.accent }} aria-hidden="true" />
+              <i
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: group.accent }}
+                aria-hidden="true"
+              />
               {group.label}
               <span className="text-[var(--color-foreground-muted)]">{group.members.length}</span>
             </span>
           ),
-          children: <DayList days={group.members} emptyLabel={t("No dates in this group.")} locale={locale} showPlaytime={group.showPlaytime} />,
+          children: (
+            <DayList
+              days={group.members}
+              emptyLabel={t("No dates in this group.")}
+              locale={locale}
+              showPlaytime={group.showPlaytime}
+            />
+          ),
         }))}
       />
     </Modal>
   );
 }
 
-function DayList({ days, emptyLabel, locale, showPlaytime }: { days: readonly AttendanceMemberDay[]; emptyLabel: string; locale: "en" | "id"; showPlaytime: boolean }) {
-  if (days.length === 0) return <p className="py-6 text-center text-sm text-[var(--color-foreground-muted)]">{emptyLabel}</p>;
+function DayList({
+  days,
+  emptyLabel,
+  locale,
+  showPlaytime,
+}: {
+  days: readonly AttendanceMemberDay[];
+  emptyLabel: string;
+  locale: "en" | "id";
+  showPlaytime: boolean;
+}) {
+  if (days.length === 0)
+    return <p className="py-6 text-center text-sm text-[var(--color-foreground-muted)]">{emptyLabel}</p>;
 
   return (
     <ul className="grid max-h-[52vh] gap-1 overflow-y-auto pr-1">
       {days.map((day) => (
-        <li className="flex items-baseline justify-between gap-3 border-b border-[rgba(217,169,80,.1)] py-1.5 text-sm last:border-b-0" key={day.date}>
+        <li
+          className="flex items-baseline justify-between gap-3 border-b border-[rgba(217,169,80,.1)] py-1.5 text-sm last:border-b-0"
+          key={day.date}
+        >
           <strong className="text-[var(--color-foreground)]">{formatDate(day.date, locale)}</strong>
-          {showPlaytime ? <span className="shrink-0 text-xs text-[var(--color-foreground-muted)]">{formatDuration(day.playtimeSeconds)}</span> : null}
+          {showPlaytime ? (
+            <span className="shrink-0 text-xs text-[var(--color-foreground-muted)]">
+              {formatDuration(day.playtimeSeconds)}
+            </span>
+          ) : null}
         </li>
       ))}
     </ul>
@@ -71,8 +108,13 @@ function DayList({ days, emptyLabel, locale, showPlaytime }: { days: readonly At
 }
 
 function formatDate(date: string, locale: "en" | "id") {
-  return new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })
-    .format(new Date(`${date}T00:00:00Z`));
+  return new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`));
 }
 
 function formatDuration(seconds: number) {

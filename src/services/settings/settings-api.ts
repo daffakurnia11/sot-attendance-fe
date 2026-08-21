@@ -11,15 +11,19 @@ const settingsShape = {
   start_date_contract: z.string().regex(/^([1-9]|[12]\d|3[01])$/),
 };
 
-export const settingsValuesSchema = z.object(settingsShape).refine((values) => Number(values.attendance_minimum) <= Number(values.attendance_maximum), {
-  message: "Attendance minimum must not exceed maximum",
-  path: ["attendance_minimum"],
-});
+export const settingsValuesSchema = z
+  .object(settingsShape)
+  .refine((values) => Number(values.attendance_minimum) <= Number(values.attendance_maximum), {
+    message: "Attendance minimum must not exceed maximum",
+    path: ["attendance_minimum"],
+  });
 
-export const settingsSchema = z.object({ ...settingsShape, is_admin: z.boolean() }).refine((values) => Number(values.attendance_minimum) <= Number(values.attendance_maximum), {
-  message: "Attendance minimum must not exceed maximum",
-  path: ["attendance_minimum"],
-});
+export const settingsSchema = z
+  .object({ ...settingsShape, is_admin: z.boolean() })
+  .refine((values) => Number(values.attendance_minimum) <= Number(values.attendance_maximum), {
+    message: "Attendance minimum must not exceed maximum",
+    path: ["attendance_minimum"],
+  });
 
 export type SettingsData = z.infer<typeof settingsSchema>;
 export type SettingsValues = z.infer<typeof settingsValuesSchema>;
@@ -44,7 +48,12 @@ export async function fetchSettings(baseURL: string, accessToken: string, fetche
   return parsed.data;
 }
 
-export async function updateSettings(baseURL: string, accessToken: string, values: SettingsValues, fetcher: typeof fetch = fetch) {
+export async function updateSettings(
+  baseURL: string,
+  accessToken: string,
+  values: SettingsValues,
+  fetcher: typeof fetch = fetch,
+) {
   const response = await fetcher(new URL("/api/v1/settings", baseURL), {
     method: "PATCH",
     headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },

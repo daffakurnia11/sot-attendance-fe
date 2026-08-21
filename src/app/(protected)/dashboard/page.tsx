@@ -10,7 +10,11 @@ export default async function DashboardPage() {
   const data = await loadDashboard();
 
   return (
-    <DashboardPageLayout description="Attendance and FiveM activity summary." eyebrow="Member overview" title="Dashboard">
+    <DashboardPageLayout
+      description="Attendance and FiveM activity summary."
+      eyebrow="Member overview"
+      title="Dashboard"
+    >
       <DashboardView data={data} />
     </DashboardPageLayout>
   );

@@ -27,7 +27,13 @@ export function AttendanceDayDetail({ date, onClose, report }: Props) {
     // Playtime is shown for a recorded miss because the row holds a real
     // session that fell short, which is the useful part. Unrecorded has no row
     // at all, so its zero would be an invention.
-    { key: "unrecorded", accent: "var(--color-foreground-muted)", label: t("Not Recorded"), members: detail.unrecorded, showPlaytime: false },
+    {
+      key: "unrecorded",
+      accent: "var(--color-foreground-muted)",
+      label: t("Not Recorded"),
+      members: detail.unrecorded,
+      showPlaytime: false,
+    },
   ];
 
   return (
@@ -41,32 +47,58 @@ export function AttendanceDayDetail({ date, onClose, report }: Props) {
           key: group.key,
           label: (
             <span className="flex items-center gap-2 text-xs font-extrabold tracking-[.1em] uppercase">
-              <i className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: group.accent }} aria-hidden="true" />
+              <i
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: group.accent }}
+                aria-hidden="true"
+              />
               {group.label}
               <span className="text-[var(--color-foreground-muted)]">{group.members.length}</span>
             </span>
           ),
-          children: <MemberList emptyLabel={t("No members in this group.")} members={group.members} showPlaytime={group.showPlaytime} />,
+          children: (
+            <MemberList
+              emptyLabel={t("No members in this group.")}
+              members={group.members}
+              showPlaytime={group.showPlaytime}
+            />
+          ),
         }))}
       />
     </Modal>
   );
 }
 
-function MemberList({ emptyLabel, members, showPlaytime }: { emptyLabel: string; members: readonly AttendanceDayMember[]; showPlaytime: boolean }) {
-  if (members.length === 0) return <p className="py-6 text-center text-sm text-[var(--color-foreground-muted)]">{emptyLabel}</p>;
+function MemberList({
+  emptyLabel,
+  members,
+  showPlaytime,
+}: {
+  emptyLabel: string;
+  members: readonly AttendanceDayMember[];
+  showPlaytime: boolean;
+}) {
+  if (members.length === 0)
+    return <p className="py-6 text-center text-sm text-[var(--color-foreground-muted)]">{emptyLabel}</p>;
 
   return (
     // Capped so a 40-name group scrolls inside the dialog instead of pushing it
     // past the viewport.
     <ul className="grid max-h-[52vh] gap-1 overflow-y-auto pr-1">
       {members.map((member) => (
-        <li className="flex items-baseline justify-between gap-3 border-b border-[rgba(217,169,80,.1)] py-1.5 text-sm last:border-b-0" key={member.memberID}>
+        <li
+          className="flex items-baseline justify-between gap-3 border-b border-[rgba(217,169,80,.1)] py-1.5 text-sm last:border-b-0"
+          key={member.memberID}
+        >
           <span className="min-w-0">
             <strong className="text-[var(--color-foreground)]">{member.name}</strong>
             <span className="ml-2 text-xs text-[var(--color-foreground-muted)]">@{member.username}</span>
           </span>
-          {showPlaytime ? <span className="shrink-0 text-xs text-[var(--color-foreground-muted)]">{formatDuration(member.playtimeSeconds)}</span> : null}
+          {showPlaytime ? (
+            <span className="shrink-0 text-xs text-[var(--color-foreground-muted)]">
+              {formatDuration(member.playtimeSeconds)}
+            </span>
+          ) : null}
         </li>
       ))}
     </ul>
@@ -74,8 +106,13 @@ function MemberList({ emptyLabel, members, showPlaytime }: { emptyLabel: string;
 }
 
 function formatFullDate(date: string, locale: "en" | "id") {
-  return new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
-    .format(new Date(`${date}T00:00:00Z`));
+  return new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`));
 }
 
 function formatDuration(seconds: number) {

@@ -9,5 +9,13 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const [session, settings] = await Promise.all([auth(), loadSettings()]);
-  return <DashboardPage description="Adjust your profile and system configuration." eyebrow="Account and system" title="Settings"><SettingsView initialCharacterName={session?.user?.member?.character_name ?? ""} initialData={settings} /></DashboardPage>;
+  return (
+    <DashboardPage
+      description="Adjust your profile and system configuration."
+      eyebrow="Account and system"
+      title="Settings"
+    >
+      <SettingsView initialCharacterName={session?.user?.member?.character_name ?? ""} initialData={settings} />
+    </DashboardPage>
+  );
 }
