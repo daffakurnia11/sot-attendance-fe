@@ -25,7 +25,7 @@ export function AttendanceMemberDetail({ memberID, onClose, report }: Props) {
   const rate = detail.attendanceDays === 0 ? 0 : Math.round((detail.attended.length / detail.attendanceDays) * 100);
   const groups = [
     { key: "attended", accent: "#55dfbd", label: t("Attended"), members: detail.attended, showPlaytime: true },
-    { key: "missed", accent: "#ef7474", label: t("Not Attending"), members: detail.missed, showPlaytime: true },
+    { key: "missed", accent: "#ef7474", label: t("Not Attended"), members: detail.missed, showPlaytime: true },
     // Playtime is shown for a recorded miss because the row holds a real
     // session that fell short, which is the useful part. Unrecorded has no row
     // at all, so its zero would be an invention.
