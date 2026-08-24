@@ -1,11 +1,7 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { PlayerDirectoryLive } from "@/components/organisms";
-import { loadDashboard } from "@/services/dashboard/dashboard.service.server";
+import { routes } from "@/config/routes";
 
-export const metadata: Metadata = { title: "Discord Players" };
-
-export default async function DiscordPlayersPage() {
-  // Rendered server-side for first paint; PlayerDirectoryLive keeps it current.
-  return <PlayerDirectoryLive eyebrow="Discord bot presence" initialData={await loadDashboard()} source="Discord" />;
+export default function DiscordPlayersPage() {
+  redirect(routes.players.tabs.discord);
 }

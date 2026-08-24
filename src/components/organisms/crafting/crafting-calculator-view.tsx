@@ -97,7 +97,7 @@ export function CraftingCalculatorView({ initialData }: Props) {
               );
               return (
                 <div
-                  className="grid grid-cols-[minmax(0,1fr)_76px_28px] items-end gap-2 border border-[var(--color-border)] bg-[rgba(7,6,5,.45)] p-2"
+                  className="grid min-w-0 grid-cols-[minmax(0,1fr)_76px_28px] items-end gap-2 border border-[var(--color-border)] bg-[rgba(7,6,5,.45)] p-2"
                   key={input.id}
                 >
                   <label className="grid min-w-0 gap-1">
@@ -106,7 +106,7 @@ export function CraftingCalculatorView({ initialData }: Props) {
                     </span>
                     <Select
                       aria-label={`Weapon ${index + 1}`}
-                      className="h-9"
+                      className="h-9 min-w-0 w-full"
                       value={input.weapon_code || undefined}
                       options={recipes.map((recipe) => ({
                         label: recipe.weapon_name,
@@ -119,7 +119,7 @@ export function CraftingCalculatorView({ initialData }: Props) {
                       optionFilterProp="label"
                     />
                   </label>
-                  <label className="grid gap-1">
+                  <label className="grid min-w-0 gap-1">
                     <span className="text-[9px] font-extrabold tracking-[.12em] text-[var(--color-primary-muted)] uppercase">
                       Qty
                     </span>

@@ -4,16 +4,14 @@ import Discord from "next-auth/providers/discord";
 import { routes } from "@/config/routes";
 import { isDiscordAuthConfigured, serverEnv } from "@/lib/env.server";
 import type { AppMember } from "@/services/auth";
-import { BackendAuthError } from "@/services/auth";
 import { authenticateDiscordMember } from "@/services/auth/auth.service.server";
-
-type SafeAuthErrorCode = "AUTHENTICATION_FAILED" | "MEMBER_NOT_REGISTERED";
-
-function safeAuthErrorCode(error: unknown): SafeAuthErrorCode {
-  return error instanceof BackendAuthError && error.code === "MEMBER_NOT_REGISTERED"
-    ? "MEMBER_NOT_REGISTERED"
-    : "AUTHENTICATION_FAILED";
-}
+import {
+  classifyDiscordAuthFailure,
+  createAuthFailureReference,
+  logAuthJsError,
+  logDiscordAuthFailure,
+  type SafeAuthErrorCode,
+} from "@/services/auth/auth-observability.server";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   secret: serverEnv.AUTH_SECRET,
@@ -21,6 +19,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
     maxAge: serverEnv.AUTH_SESSION_MAX_AGE_SECONDS,
+  },
+  logger: {
+    error(error) {
+      logAuthJsError(error);
+    },
   },
   providers: isDiscordAuthConfigured
     ? [
@@ -40,22 +43,41 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         delete token.appAccessToken;
         delete token.appAccessTokenExpiresAt;
         delete token.authErrorCode;
+        delete token.authErrorReference;
         delete token.member;
 
         if (!account.access_token) {
+          const reference = createAuthFailureReference();
           token.authErrorCode = "AUTHENTICATION_FAILED";
+          token.authErrorReference = reference;
+          logDiscordAuthFailure({
+            failure: { code: "AUTHENTICATION_FAILED", internalCode: "MISSING_DISCORD_ACCESS_TOKEN" },
+            phase: "missing_access_token",
+            reference,
+          });
         } else {
           try {
             const backendAuth = await authenticateDiscordMember(account.access_token);
             if (backendAuth.member.discord_user_id !== account.providerAccountId) {
+              const reference = createAuthFailureReference();
               token.authErrorCode = "AUTHENTICATION_FAILED";
+              token.authErrorReference = reference;
+              logDiscordAuthFailure({
+                failure: { code: "AUTHENTICATION_FAILED", internalCode: "DISCORD_IDENTITY_MISMATCH" },
+                phase: "identity_verification",
+                reference,
+              });
             } else {
               token.appAccessToken = backendAuth.access_token;
               token.appAccessTokenExpiresAt = backendAuth.expires_at;
               token.member = backendAuth.member;
             }
           } catch (error) {
-            token.authErrorCode = safeAuthErrorCode(error);
+            const failure = classifyDiscordAuthFailure(error);
+            const reference = createAuthFailureReference();
+            token.authErrorCode = failure.code;
+            token.authErrorReference = reference;
+            logDiscordAuthFailure({ failure, phase: "backend_exchange", reference });
           }
         }
       }
@@ -71,6 +93,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
     session({ session, token }) {
       session.authErrorCode = token.authErrorCode as SafeAuthErrorCode | undefined;
+      session.authErrorReference = token.authErrorReference as string | undefined;
       session.user.member = token.member as AppMember | undefined;
       return session;
     },

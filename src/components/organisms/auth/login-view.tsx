@@ -10,14 +10,22 @@ import { AuthFeedback } from "./auth-feedback";
 import { AuthSubmitButton } from "./auth-submit-button";
 
 type LoginViewProps = {
-  authError: "authentication" | "member-not-registered" | null;
+  authError: "authentication" | "member-not-registered" | "service-unavailable" | null;
+  authErrorReference?: string;
   discordConfigured: boolean;
   memberName?: string | null;
   signInAction: () => Promise<void>;
   signOutAction: () => Promise<void>;
 };
 
-export function LoginView({ authError, discordConfigured, memberName, signInAction, signOutAction }: LoginViewProps) {
+export function LoginView({
+  authError,
+  authErrorReference,
+  discordConfigured,
+  memberName,
+  signInAction,
+  signOutAction,
+}: LoginViewProps) {
   const { t } = useI18n();
   return (
     <>
@@ -71,7 +79,7 @@ export function LoginView({ authError, discordConfigured, memberName, signInActi
         </div>
 
         <div className="mt-10 border-y border-[var(--color-border)] py-7">
-          {authError ? <AuthFeedback kind={authError} /> : null}
+          {authError ? <AuthFeedback kind={authError} reference={authErrorReference} /> : null}
           {!discordConfigured ? <AuthFeedback kind="configuration" /> : null}
 
           {memberName ? (

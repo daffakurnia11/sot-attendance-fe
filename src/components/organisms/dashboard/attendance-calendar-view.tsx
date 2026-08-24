@@ -9,12 +9,14 @@ import type { AttendanceDayStatus, AttendanceReport } from "@/services/attendanc
 import { getAttendanceCalendar, getAttendanceCalendarSummary, groupAttendanceWeeks } from "@/services/attendance";
 
 import { AttendanceDayDetail } from "./attendance-day-detail";
+import { AttendanceModeTabs } from "./attendance-mode-tabs";
 
 type Props = Readonly<{
   initialData: AttendanceReport | null;
   playerThreshold: number;
   /** Asia/Jakarta date, resolved on the server so both renders agree. */
   today: string;
+  combined?: boolean;
 }>;
 
 const statusStyles: Record<AttendanceDayStatus, { card: string; dot: string; count: string; label: string }> = {
@@ -51,7 +53,7 @@ const statusLabels: Record<AttendanceDayStatus, string> = {
   upcoming: "Upcoming",
 };
 
-export function AttendanceCalendarView({ initialData, playerThreshold, today }: Props) {
+export function AttendanceCalendarView({ initialData, playerThreshold, today, combined = false }: Props) {
   const [report, setReport] = useState(initialData);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -94,10 +96,15 @@ export function AttendanceCalendarView({ initialData, playerThreshold, today }: 
 
   return (
     <DashboardPage
-      description="Daily turnout across the contract period, measured against the player threshold."
+      description={
+        combined
+          ? "Monthly member totals and daily turnout across the contract period."
+          : "Daily turnout across the contract period, measured against the player threshold."
+      }
       eyebrow="Member records"
-      title="Attendance Calendar"
+      title={combined ? "Attendance" : "Attendance Calendar"}
     >
+      {combined ? <AttendanceModeTabs active="calendar" /> : null}
       <section className="mt-[30px] grid gap-3 sm:grid-cols-3">
         <LegendCard
           label={t("Safe")}

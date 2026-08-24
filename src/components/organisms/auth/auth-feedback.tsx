@@ -5,10 +5,11 @@ import { Alert } from "antd";
 import { useI18n } from "@/i18n";
 
 type AuthFeedbackProps = {
-  kind: "authentication" | "configuration" | "member-not-registered";
+  kind: "authentication" | "configuration" | "member-not-registered" | "service-unavailable";
+  reference?: string;
 };
 
-export function AuthFeedback({ kind }: AuthFeedbackProps) {
+export function AuthFeedback({ kind, reference }: AuthFeedbackProps) {
   const { t } = useI18n();
   const title =
     kind === "configuration"
@@ -17,7 +18,17 @@ export function AuthFeedback({ kind }: AuthFeedbackProps) {
         ? t(
             "Your Discord account is not registered as an SOT member. Connect to the FiveM server once, then try again.",
           )
-        : t("Discord sign-in could not be completed. Please try again.");
+        : kind === "service-unavailable"
+          ? t("Authentication service is unavailable. Check the API and database connection, then try again.")
+          : t("Discord sign-in could not be completed. Please try again.");
 
-  return <Alert className="mb-5" showIcon title={title} type={kind === "configuration" ? "warning" : "error"} />;
+  return (
+    <Alert
+      className="mb-5"
+      description={reference ? `${t("Reference")}: ${reference}` : undefined}
+      showIcon
+      title={title}
+      type={kind === "configuration" ? "warning" : "error"}
+    />
+  );
 }

@@ -1,11 +1,7 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { PlayerDirectoryLive } from "@/components/organisms";
-import { loadDashboard } from "@/services/dashboard/dashboard.service.server";
+import { routes } from "@/config/routes";
 
-export const metadata: Metadata = { title: "CFX Players" };
-
-export default async function CFXPlayersPage() {
-  // Rendered server-side for first paint; PlayerDirectoryLive keeps it current.
-  return <PlayerDirectoryLive eyebrow="FiveM server presence" initialData={await loadDashboard()} source="CFX" />;
+export default function CFXPlayersPage() {
+  redirect(routes.players.tabs.cfx);
 }

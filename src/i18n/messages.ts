@@ -26,6 +26,7 @@ export const en = {
   "Server Logs": "Server Logs",
   "Discord Players": "Discord Players",
   "CFX Players": "CFX Players",
+  "Live Discord and CFX player presence.": "Live Discord and CFX player presence.",
   System: "System",
   Settings: "Settings",
   "Member system": "Member system",
@@ -90,6 +91,8 @@ export const en = {
     "Your monthly attendance statistics from completed sessions.",
   "Member records": "Member records",
   "Monthly attendance records for all members.": "Monthly attendance records for all members.",
+  "Monthly member totals and daily turnout across the contract period.":
+    "Monthly member totals and daily turnout across the contract period.",
   "Daily turnout across the contract period, measured against the player threshold.":
     "Daily turnout across the contract period, measured against the player threshold.",
   "Total attendance": "Total attendance",
@@ -233,6 +236,9 @@ export const en = {
     "Discord handles authentication. SOT never receives or stores your Discord password.",
   "Discord sign-in could not be completed. Please try again.":
     "Discord sign-in could not be completed. Please try again.",
+  "Authentication service is unavailable. Check the API and database connection, then try again.":
+    "Authentication service is unavailable. Check the API and database connection, then try again.",
+  Reference: "Reference",
   "Your Discord account is not registered as an SOT member. Connect to the FiveM server once, then try again.":
     "Your Discord account is not registered as an SOT member. Connect to the FiveM server once, then try again.",
   "Discord authentication is not configured yet. Add both Discord credentials to the environment.":
@@ -256,6 +262,8 @@ export const id: Record<MessageKey, string> = {
   "My Records": "Catatan Saya",
   "Attendance and Payslip": "Absensi dan Payslip",
   "Attendance Recap": "Rekap Absensi",
+  "Monthly member totals and daily turnout across the contract period.":
+    "Total member bulanan dan kehadiran harian sepanjang periode kontrak.",
   "Attendance Calendar": "Kalender Absensi",
   Good: "Bagus",
   Safe: "Aman",
@@ -273,6 +281,8 @@ export const id: Record<MessageKey, string> = {
   "Server Logs": "Log Server",
   "Discord Players": "Player Discord",
   "CFX Players": "Player CFX",
+  "Player Logs": "Log Player",
+  "Live Discord and CFX player presence.": "Status player Discord dan CFX secara langsung.",
   System: "Sistem",
   Settings: "Pengaturan",
   "Member system": "Sistem member",
@@ -467,6 +477,9 @@ export const id: Record<MessageKey, string> = {
   "Discord handles authentication. SOT never receives or stores your Discord password.":
     "Autentikasi ditangani Discord. SOT tidak pernah menerima atau menyimpan password Discord Anda.",
   "Discord sign-in could not be completed. Please try again.": "Login Discord gagal diselesaikan. Coba lagi.",
+  "Authentication service is unavailable. Check the API and database connection, then try again.":
+    "Layanan autentikasi tidak tersedia. Periksa koneksi API dan database, lalu coba lagi.",
+  Reference: "Referensi",
   "Your Discord account is not registered as an SOT member. Connect to the FiveM server once, then try again.":
     "Akun Discord Anda belum terdaftar sebagai member SOT. Hubungkan ke server FiveM sekali, lalu coba lagi.",
   "Discord authentication is not configured yet. Add both Discord credentials to the environment.":

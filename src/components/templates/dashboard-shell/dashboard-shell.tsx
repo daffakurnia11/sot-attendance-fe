@@ -32,8 +32,7 @@ const menuGroups = [
     // Roster-wide views: every member's attendance and everyone's payout.
     adminOnly: true,
     items: [
-      { href: routes.attendanceRecap, label: "Attendance Recap", icon: "AR" },
-      { href: routes.attendanceCalendar, label: "Attendance Calendar", icon: "AC" },
+      { href: routes.attendanceTabs.recap, label: "Attendance", icon: "AT" },
       { href: routes.payslipRecap, label: "Payslip Recap", icon: "PR" },
     ],
   },
@@ -43,10 +42,7 @@ const menuGroups = [
   },
   {
     label: "Server Logs",
-    items: [
-      { href: routes.players.discord, label: "Discord Players", icon: "DP" },
-      { href: routes.players.cfx, label: "CFX Players", icon: "CX" },
-    ],
+    items: [{ href: routes.players.tabs.discord, label: "Player Logs", icon: "PL" }],
   },
   {
     label: "System",
@@ -92,7 +88,7 @@ export function DashboardShell({ children, displayName, isAdmin, username, logou
                 </p>
                 <div className="grid gap-1.5">
                   {group.items.map((item) => {
-                    const active = item.href === pathname;
+                    const active = item.href.split("?")[0] === pathname;
                     return (
                       <Link
                         aria-current={active ? "page" : undefined}

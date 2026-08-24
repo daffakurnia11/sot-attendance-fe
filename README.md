@@ -47,6 +47,37 @@ Generate `AUTH_SECRET` with `pnpm exec auth secret`.
 
 Discord OAuth exchange happens inside Auth.js server callback. Auth.js forwards Discord access token to `GO_API_URL`, receives app JWT, stores it only inside encrypted HTTP-only Auth.js JWT, and exposes member metadata to session. Browser never receives Go API URL, Discord access token, or app JWT.
 
+## Authentication troubleshooting
+
+Failed Discord sign-ins write one-line JSON to frontend server logs. Match UI
+reference with `reference` field in log:
+
+```json
+{
+  "event": "discord_auth_failed",
+  "reference": "A1B2C3D4E5",
+  "phase": "backend_exchange",
+  "code": "BACKEND_UNAVAILABLE",
+  "status": 503
+}
+```
+
+Logs contain only safe phase, code, status, and reference metadata. Discord
+tokens, application secrets, usernames, raw provider payloads, and backend error
+messages are never logged.
+
+`BACKEND_UNAVAILABLE` means Discord OAuth completed but frontend could not reach
+Go token-exchange API. Check API and database dependency separately:
+
+```sh
+curl -i http://127.0.0.1:8080/healthz
+cd ../sot-attendance-go && make local-logs
+```
+
+Auth.js provider failures such as callback or OAuth configuration errors use
+`{"event":"authjs_error", ...}`. Their safe `type` identifies failure class
+without printing provider response or credentials.
+
 ## Checks
 
 ```sh

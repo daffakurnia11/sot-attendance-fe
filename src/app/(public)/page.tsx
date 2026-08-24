@@ -20,13 +20,16 @@ export default async function Home({ searchParams }: HomePageProps) {
   const authError =
     query.code === "MEMBER_NOT_REGISTERED" || session?.authErrorCode === "MEMBER_NOT_REGISTERED"
       ? "member-not-registered"
-      : query.error || session?.authErrorCode
-        ? "authentication"
-        : null;
+      : session?.authErrorCode === "AUTH_SERVICE_UNAVAILABLE"
+        ? "service-unavailable"
+        : query.error || session?.authErrorCode
+          ? "authentication"
+          : null;
 
   return (
     <LoginView
       authError={authError}
+      authErrorReference={session?.authErrorReference}
       discordConfigured={isDiscordAuthConfigured}
       memberName={session?.user?.member ? (session.user.name ?? content.auth.fallbackMemberName) : null}
       signInAction={signInWithDiscord}

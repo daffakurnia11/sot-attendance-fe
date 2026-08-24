@@ -16,13 +16,16 @@ import {
 
 import { AttendanceDayDetail } from "./attendance-day-detail";
 import { AttendanceMemberDetail } from "./attendance-member-detail";
+import { AttendanceModeTabs } from "./attendance-mode-tabs";
 
 export function AttendanceView({
   initialData,
   personal = false,
+  combined = false,
 }: {
   initialData: AttendanceReport | null;
   personal?: boolean;
+  combined?: boolean;
 }) {
   const [report, setReport] = useState(initialData);
   const [query, setQuery] = useState("");
@@ -82,11 +85,14 @@ export function AttendanceView({
       description={
         personal
           ? "Your monthly attendance statistics from completed sessions."
-          : "Monthly attendance records for all members."
+          : combined
+            ? "Monthly member totals and daily turnout across the contract period."
+            : "Monthly attendance records for all members."
       }
       eyebrow={personal ? "Personal records" : "Member records"}
-      title={personal ? "My Attendance" : "Attendance Recap"}
+      title={personal ? "My Attendance" : combined ? "Attendance" : "Attendance Recap"}
     >
+      {combined ? <AttendanceModeTabs active="recap" /> : null}
       <section className={`mt-[30px] grid gap-3 sm:grid-cols-2 ${personal ? "" : "xl:grid-cols-4"}`}>
         <AttendanceMetric label={t("Total attendance")} numerator={monthly.eligible} denominator={monthly.total} />
         <AttendanceMetric label={t("Attendance rate")} rate={monthly.rate} />

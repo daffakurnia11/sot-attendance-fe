@@ -7,6 +7,8 @@ import { DataTable, DataTableCell, dataTableRowClassName, OptionDropdown } from 
 import { DashboardPage } from "@/components/templates";
 import { useI18n } from "@/i18n";
 
+import { PlayerSourceTabs } from "./player-source-tabs";
+
 export type DirectoryPlayer = {
   id: string;
   name: string;
@@ -49,6 +51,7 @@ export function sortDirectoryPlayers(
 
 type PlayerDirectoryProps = {
   available?: boolean;
+  combined?: boolean;
   eyebrow: string;
   showDiscordControls?: boolean;
   source: "CFX" | "Discord";
@@ -57,6 +60,7 @@ type PlayerDirectoryProps = {
 
 export function PlayerDirectory({
   available = true,
+  combined = false,
   eyebrow,
   showDiscordControls = false,
   source,
@@ -89,10 +93,15 @@ export function PlayerDirectory({
 
   return (
     <DashboardPage
-      description={t("Full player list reported by {source}, including offline members.", { source })}
+      description={
+        combined
+          ? t("Live Discord and CFX player presence.")
+          : t("Full player list reported by {source}, including offline members.", { source })
+      }
       eyebrow={eyebrow}
-      title={`${source} Players`}
+      title={combined ? t("Player Logs") : `${source} Players`}
     >
+      {combined ? <PlayerSourceTabs active={source === "CFX" ? "cfx" : "discord"} /> : null}
       {!available ? (
         <Alert
           className="mt-6"

@@ -292,7 +292,9 @@ export async function fetchAttendance(
   const response = await fetcher(url, {
     headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
-    signal: AbortSignal.timeout(5_000),
+    // API server has a 10-second response deadline. Leave one second for the
+    // response to reach Next.js while tolerating slower remote database reads.
+    signal: AbortSignal.timeout(9_000),
   });
   if (!response.ok) throw new Error(`Attendance API returned ${response.status}`);
   const parsed = attendanceReportSchema.safeParse(await response.json());

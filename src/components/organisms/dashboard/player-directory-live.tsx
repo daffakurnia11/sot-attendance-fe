@@ -8,6 +8,7 @@ import type { DirectoryPlayer } from "./player-directory";
 import { PlayerDirectory } from "./player-directory";
 
 type Props = Readonly<{
+  combined?: boolean;
   eyebrow: string;
   initialData: DashboardData | null;
   source: "CFX" | "Discord";
@@ -20,18 +21,25 @@ type Props = Readonly<{
  * snapshot has to be mapped again: doing it server-side would freeze the rows
  * at whatever the first render produced.
  */
-export function PlayerDirectoryLive({ eyebrow, initialData, source }: Props) {
+export function PlayerDirectoryLive({ combined = false, eyebrow, initialData, source }: Props) {
   const { data } = useLiveResource({ initialData, path: "/api/dashboard", fetcher: fetchDashboardRoute });
 
   return source === "CFX" ? (
     <PlayerDirectory
       available={data?.cfx_available ?? false}
+      combined={combined}
       eyebrow={eyebrow}
       players={toCFXRows(data)}
       source="CFX"
     />
   ) : (
-    <PlayerDirectory eyebrow={eyebrow} players={toDiscordRows(data)} showDiscordControls source="Discord" />
+    <PlayerDirectory
+      combined={combined}
+      eyebrow={eyebrow}
+      players={toDiscordRows(data)}
+      showDiscordControls
+      source="Discord"
+    />
   );
 }
 
