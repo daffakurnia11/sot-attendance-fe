@@ -21,28 +21,24 @@ type DashboardShellProps = Readonly<{
 const menuGroups = [
   {
     label: "Overview",
-    items: [{ href: routes.dashboard, label: "Dashboard", icon: "DB" }],
+    items: [
+      { href: routes.dashboard, label: "Dashboard", icon: "DB" },
+      { href: routes.myRecords, label: "My Records", icon: "MR" },
+    ],
   },
   {
-    label: "Personal",
-    items: [{ href: routes.myRecords, label: "My Records", icon: "MR" }],
-  },
-  {
-    label: "Attendance and Payslip",
+    label: "Attendance & Payouts",
     // Roster-wide views: every member's attendance and everyone's payout.
     adminOnly: true,
     items: [
       { href: routes.attendanceTabs.recap, label: "Attendance", icon: "AT" },
+      { href: routes.players.tabs.discord, label: "Player Logs", icon: "PL" },
       { href: routes.payslipRecap, label: "Payslip Recap", icon: "PR" },
     ],
   },
   {
     label: "Business Zone",
     items: [{ href: routes.craftingCalculator, label: "Crafting Calculator", icon: "CC" }],
-  },
-  {
-    label: "Server Logs",
-    items: [{ href: routes.players.tabs.discord, label: "Player Logs", icon: "PL" }],
   },
   {
     label: "System",
