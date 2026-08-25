@@ -17,6 +17,8 @@ const valid = {
   attendance_minimum: "24",
   attendance_maximum: "30",
   start_date_contract: "28",
+  office_money_balance: "1012500",
+  dirty_money_balance: "18000",
   is_admin: true,
 };
 

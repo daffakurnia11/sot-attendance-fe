@@ -69,6 +69,7 @@ export function SettingsView({ initialCharacterName, initialData }: Props) {
   const [profileFeedback, setProfileFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [moneyFeedback, setMoneyFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const { t, translate } = useI18n();
 
   if (!values) return <Alert className="mt-7" type="error" showIcon title={t("Settings could not be loaded.")} />;
@@ -107,14 +108,15 @@ export function SettingsView({ initialCharacterName, initialData }: Props) {
     }
   }
 
-  async function save() {
+  async function save(section: "attendance" | "money" = "attendance") {
+    const setSectionFeedback = section === "money" ? setMoneyFeedback : setFeedback;
     const parsed = settingsValuesSchema.safeParse(values);
     if (!parsed.success || parsed.data.start_attendance === parsed.data.end_attendance) {
-      setFeedback({ type: "error", message: t("Use valid times, duration, counts, and attendance day range (1–31).") });
+      setSectionFeedback({ type: "error", message: t("Use valid times, duration, counts, and attendance day range (1–31).") });
       return;
     }
     setSaving(true);
-    setFeedback(null);
+    setSectionFeedback(null);
     try {
       const response = await fetch("/api/settings", {
         method: "PATCH",
@@ -130,9 +132,12 @@ export function SettingsView({ initialCharacterName, initialData }: Props) {
         );
       const updated = settingsSchema.parse(payload);
       setValues(updated);
-      setFeedback({ type: "success", message: t("Settings saved.") });
+      setSectionFeedback({
+        type: "success",
+        message: section === "money" ? t("Money settings saved.") : t("Settings saved."),
+      });
     } catch (error) {
-      setFeedback({
+      setSectionFeedback({
         type: "error",
         message: translate(error instanceof Error ? error.message : t("Settings could not be saved.")),
       });
@@ -238,10 +243,79 @@ export function SettingsView({ initialCharacterName, initialData }: Props) {
           <Button
             loading={saving}
             disabled={saving || !values.is_admin}
-            onClick={save}
+            onClick={() => save("attendance")}
             className="h-11 px-6 font-extrabold uppercase"
           >
             {values.is_admin ? t("Save settings") : t("Admin required")}
+          </Button>
+        </div>
+      </section>
+      <section className="border border-[var(--color-border)] bg-[rgba(242,182,61,.025)]">
+        <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-5">
+          <h2 className="font-[Impact] text-2xl font-normal uppercase">{t("Money settings")}</h2>
+          <p className="mt-1 text-sm text-[var(--color-foreground-muted)]">
+            {t("Current office and dirty money balances.")}
+          </p>
+        </div>
+        <div className="grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
+          <label className="grid gap-2">
+            <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
+              {t("Office money")}
+            </span>
+            <Input
+              aria-label={t("Current office money balance")}
+              className="h-11 border-[var(--color-border)] bg-[rgba(7,6,5,.7)] px-3 text-base"
+              disabled={!values.is_admin}
+              inputMode="numeric"
+              prefix="$"
+              value={formatIDRInput(values.office_money_balance)}
+              onChange={(event) =>
+                setValues((current) =>
+                  current ? { ...current, office_money_balance: normalizeCurrencyInput(event.target.value) } : current,
+                )
+              }
+            />
+            <span className="text-xs text-[var(--color-foreground-muted)]">
+              {values.is_admin
+                ? t("Administrator may correct current office balance.")
+                : t("Read-only. Administrator role required to edit.")}
+            </span>
+          </label>
+          <label className="grid gap-2">
+            <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
+              {t("Dirty money")}
+            </span>
+            <Input
+              aria-label={t("Current dirty money balance")}
+              className="h-11 border-[var(--color-border)] bg-[rgba(7,6,5,.7)] px-3 text-base"
+              disabled={!values.is_admin}
+              inputMode="numeric"
+              prefix="$"
+              value={formatIDRInput(values.dirty_money_balance)}
+              onChange={(event) =>
+                setValues((current) =>
+                  current ? { ...current, dirty_money_balance: normalizeCurrencyInput(event.target.value) } : current,
+                )
+              }
+            />
+            <span className="text-xs text-[var(--color-foreground-muted)]">
+              {values.is_admin
+                ? t("Administrator may correct current dirty money balance.")
+                : t("Read-only. Administrator role required to edit.")}
+            </span>
+          </label>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-[var(--color-border)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div aria-live="polite">
+            {moneyFeedback ? <Alert type={moneyFeedback.type} showIcon title={moneyFeedback.message} /> : null}
+          </div>
+          <Button
+            loading={saving}
+            disabled={saving || !values.is_admin}
+            onClick={() => save("money")}
+            className="h-11 px-6 font-extrabold uppercase"
+          >
+            {values.is_admin ? t("Save money") : t("Admin required")}
           </Button>
         </div>
       </section>

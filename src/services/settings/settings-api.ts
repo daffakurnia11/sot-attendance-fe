@@ -9,6 +9,8 @@ const settingsShape = {
   attendance_minimum: z.string().regex(/^([1-9]|[12]\d|3[01])$/),
   attendance_maximum: z.string().regex(/^([1-9]|[12]\d|3[01])$/),
   start_date_contract: z.string().regex(/^([1-9]|[12]\d|3[01])$/),
+  office_money_balance: z.string().regex(/^\d+$/),
+  dirty_money_balance: z.string().regex(/^\d+$/),
 };
 
 export const settingsValuesSchema = z
