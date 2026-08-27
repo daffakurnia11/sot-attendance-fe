@@ -12,6 +12,7 @@ const successPayload = {
     username: "delta",
     display_name: "Delta",
     character_name: "D. Kilo",
+    cfx_name: "SOT - Delta",
   },
 };
 

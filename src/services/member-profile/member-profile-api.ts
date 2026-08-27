@@ -7,8 +7,29 @@ export const memberProfileSchema = z.object({
     .min(1)
     .max(80)
     .refine((value) => !/[\r\n\0]/.test(value)),
+  cfx_name: z
+    .string()
+    .trim()
+    .max(80)
+    .refine((value) => !/[\r\n\0]/.test(value)),
 });
 export type MemberProfile = z.infer<typeof memberProfileSchema>;
+
+export async function fetchMemberProfile(
+  baseURL: string,
+  accessToken: string,
+  fetcher: typeof fetch = fetch,
+) {
+  const response = await fetcher(new URL("/api/v1/me/profile", baseURL), {
+    headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(5_000),
+  });
+  if (!response.ok) throw new Error(`Profile API returned ${response.status}`);
+  const parsed = memberProfileSchema.safeParse(await response.json().catch(() => null));
+  if (!parsed.success) throw new Error("Profile API returned invalid data");
+  return parsed.data;
+}
 
 export async function updateMemberProfile(
   baseURL: string,

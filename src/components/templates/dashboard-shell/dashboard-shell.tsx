@@ -32,7 +32,7 @@ const menuGroups = [
     adminOnly: true,
     items: [
       { href: routes.attendanceTabs.recap, label: "Attendance", icon: "AT" },
-      { href: routes.players.tabs.discord, label: "Player Logs", icon: "PL" },
+      { href: routes.players.home, label: "Player Logs", icon: "PL" },
       { href: routes.payslipRecap, label: "Payslip Recap", icon: "PR" },
     ],
   },

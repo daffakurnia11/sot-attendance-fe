@@ -186,6 +186,8 @@ export const en = {
   "My profile": "My profile",
   "Settings for authenticated member.": "Settings for authenticated member.",
   "Name shown in attendance recap and player records.": "Name shown in attendance recap and player records.",
+  "CFX name": "CFX name",
+  "Player name used on CFX server. Leave blank when not registered.": "Player name used on CFX server. Leave blank when not registered.",
   "Update your character name used throughout attendance records.":
     "Update your character name used throughout attendance records.",
   "Character name": "Character name",
@@ -193,6 +195,7 @@ export const en = {
   "Character name must contain 1 to 80 characters.": "Character name must contain 1 to 80 characters.",
   "Profile could not be saved.": "Profile could not be saved.",
   "Character name saved.": "Character name saved.",
+  "Profile saved.": "Profile saved.",
   "Attendance settings": "Attendance settings",
   "Values stored in settings table.": "Values stored in settings table.",
   "Read-only. Administrator role required to edit.": "Read-only. Administrator role required to edit.",
@@ -450,6 +453,8 @@ export const id: Record<MessageKey, string> = {
   "My profile": "Profil saya",
   "Settings for authenticated member.": "Pengaturan untuk member yang sedang login.",
   "Name shown in attendance recap and player records.": "Nama yang tampil pada rekap absensi dan catatan player.",
+  "CFX name": "Nama CFX",
+  "Player name used on CFX server. Leave blank when not registered.": "Nama player yang digunakan di server CFX. Kosongkan jika belum terdaftar.",
   "Update your character name used throughout attendance records.":
     "Perbarui nama karakter yang digunakan pada seluruh catatan absensi.",
   "Character name": "Nama karakter",
@@ -457,6 +462,7 @@ export const id: Record<MessageKey, string> = {
   "Character name must contain 1 to 80 characters.": "Nama karakter harus berisi 1 sampai 80 karakter.",
   "Profile could not be saved.": "Profil gagal disimpan.",
   "Character name saved.": "Nama karakter tersimpan.",
+  "Profile saved.": "Profil tersimpan.",
   "Attendance settings": "Pengaturan absensi",
   "Values stored in settings table.": "Nilai tersimpan di tabel settings.",
   "Read-only. Administrator role required to edit.": "Hanya-baca. Role administrator diperlukan untuk mengubah.",

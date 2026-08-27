@@ -9,7 +9,7 @@ import { memberProfileSchema } from "@/services/member-profile";
 import type { SettingsData } from "@/services/settings";
 import { formatIDRInput, normalizeCurrencyInput, settingsSchema, settingsValuesSchema } from "@/services/settings";
 
-type Props = Readonly<{ initialCharacterName: string; initialData: SettingsData | null }>;
+type Props = Readonly<{ initialCharacterName: string; initialCFXName: string; initialData: SettingsData | null }>;
 
 const fields = [
   {
@@ -62,9 +62,10 @@ const fields = [
   },
 ] as const;
 
-export function SettingsView({ initialCharacterName, initialData }: Props) {
+export function SettingsView({ initialCharacterName, initialCFXName, initialData }: Props) {
   const [values, setValues] = useState<SettingsData | null>(initialData);
   const [characterName, setCharacterName] = useState(initialCharacterName);
+  const [cfxName, setCFXName] = useState(initialCFXName);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -75,7 +76,7 @@ export function SettingsView({ initialCharacterName, initialData }: Props) {
   if (!values) return <Alert className="mt-7" type="error" showIcon title={t("Settings could not be loaded.")} />;
 
   async function saveProfile() {
-    const parsed = memberProfileSchema.safeParse({ character_name: characterName });
+    const parsed = memberProfileSchema.safeParse({ character_name: characterName, cfx_name: cfxName });
     if (!parsed.success) {
       setProfileFeedback({ type: "error", message: t("Character name must contain 1 to 80 characters.") });
       return;
@@ -97,7 +98,8 @@ export function SettingsView({ initialCharacterName, initialData }: Props) {
         );
       const updated = memberProfileSchema.parse(payload);
       setCharacterName(updated.character_name);
-      setProfileFeedback({ type: "success", message: t("Character name saved.") });
+      setCFXName(updated.cfx_name);
+      setProfileFeedback({ type: "success", message: t("Profile saved.") });
     } catch (error) {
       setProfileFeedback({
         type: "error",
@@ -153,8 +155,8 @@ export function SettingsView({ initialCharacterName, initialData }: Props) {
           <h2 className="font-[Impact] text-2xl font-normal uppercase">{t("My profile")}</h2>
           <p className="mt-1 text-sm text-[var(--color-foreground-muted)]">{t("Settings for authenticated member.")}</p>
         </div>
-        <div className="grid gap-2 p-4 sm:p-5">
-          <label className="grid max-w-2xl gap-2">
+        <div className="grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
+          <label className="grid gap-2">
             <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
               {t("Character name")}
             </span>
@@ -166,6 +168,20 @@ export function SettingsView({ initialCharacterName, initialData }: Props) {
             />
             <span className="text-xs text-[var(--color-foreground-muted)]">
               {t("Name shown in attendance recap and player records.")}
+            </span>
+          </label>
+          <label className="grid gap-2">
+            <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
+              {t("CFX name")}
+            </span>
+            <Input
+              className="h-11 border-[var(--color-border)] bg-[rgba(7,6,5,.7)] px-3 text-base"
+              maxLength={80}
+              value={cfxName}
+              onChange={(event) => setCFXName(event.target.value)}
+            />
+            <span className="text-xs text-[var(--color-foreground-muted)]">
+              {t("Player name used on CFX server. Leave blank when not registered.")}
             </span>
           </label>
         </div>

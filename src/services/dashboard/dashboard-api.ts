@@ -7,8 +7,10 @@ const playerSchema = z.object({
   username: z.string(),
   display_name: z.string(),
   character_name: z.string(),
+  cfx_name: z.string(),
   started_at: z.iso.datetime().nullable(),
   status: z.enum(["connecting", "connected", "offline"]),
+  current_playtime_seconds: z.number().int().nonnegative(),
   total_playtime_seconds: z.number().int().nonnegative(),
 });
 

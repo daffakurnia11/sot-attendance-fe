@@ -8,7 +8,7 @@ import { cn } from "@/lib";
 type DataTableProps = Readonly<{
   children: React.ReactNode;
   code: string;
-  columns: Array<{ label: string; className?: string }>;
+  columns: Array<{ key?: string; label: string; className?: string }>;
   empty: string;
   footer?: React.ReactNode;
   summary?: React.ReactNode;
@@ -42,7 +42,7 @@ export function DataTable({ children, code, columns, empty, footer, summary, tit
           <thead>
             <tr className="border-b border-[rgba(217,169,80,.14)] text-xs font-black tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
               {columns.map((column) => (
-                <th className={cn("px-[18px] py-2.5", column.className)} key={column.label}>
+                <th className={cn("px-[18px] py-2.5", column.className)} key={column.key ?? column.label}>
                   {translate(column.label)}
                 </th>
               ))}

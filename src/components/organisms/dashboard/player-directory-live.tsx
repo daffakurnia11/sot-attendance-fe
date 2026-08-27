@@ -4,62 +4,56 @@ import { useLiveResource } from "@/hooks/use-live-resource";
 import type { DashboardData } from "@/services/dashboard";
 import { fetchDashboardRoute } from "@/services/dashboard";
 
-import type { DirectoryPlayer } from "./player-directory";
+import type { CombinedPlayer } from "./player-directory";
 import { PlayerDirectory } from "./player-directory";
 
-type Props = Readonly<{
-  combined?: boolean;
-  eyebrow: string;
-  initialData: DashboardData | null;
-  source: "CFX" | "Discord";
-}>;
+type Props = Readonly<{ eyebrow: string; initialData: DashboardData | null }>;
 
-/**
- * Keeps a player directory current.
- *
- * The mapping to rows lives here rather than in the page, because a refreshed
- * snapshot has to be mapped again: doing it server-side would freeze the rows
- * at whatever the first render produced.
- */
-export function PlayerDirectoryLive({ combined = false, eyebrow, initialData, source }: Props) {
+export function PlayerDirectoryLive({ eyebrow, initialData }: Props) {
   const { data } = useLiveResource({ initialData, path: "/api/dashboard", fetcher: fetchDashboardRoute });
-
-  return source === "CFX" ? (
-    <PlayerDirectory
-      available={data?.cfx_available ?? false}
-      combined={combined}
-      eyebrow={eyebrow}
-      players={toCFXRows(data)}
-      source="CFX"
-    />
-  ) : (
-    <PlayerDirectory
-      combined={combined}
-      eyebrow={eyebrow}
-      players={toDiscordRows(data)}
-      showDiscordControls
-      source="Discord"
-    />
-  );
+  return <PlayerDirectory cfxAvailable={data?.cfx_available ?? false} eyebrow={eyebrow} players={combinePlayerLogs(data)} />;
 }
 
-function toCFXRows(data: DashboardData | null): DirectoryPlayer[] {
-  return (data?.cfx_players ?? []).map((player) => ({
-    id: String(player.id),
-    name: player.name,
-    identity: `Server ID ${player.id}`,
-    detail: `${player.ping}ms ping`,
-    status: "connected",
-  }));
+export function combinePlayerLogs(data: DashboardData | null): CombinedPlayer[] {
+  if (!data) return [];
+  const liveCFXByName = new Map(data.cfx_players.map((player) => [normalizeCFXName(player.name), player]));
+  const matchedCFXNames = new Set<string>();
+  const members: CombinedPlayer[] = data.discord_players.map((player) => {
+    const cfxKey = normalizeCFXName(player.cfx_name);
+    const cfx = cfxKey ? liveCFXByName.get(cfxKey) : undefined;
+    if (cfx) matchedCFXNames.add(cfxKey);
+    return {
+      id: `member-${player.member_id}`,
+      characterName: player.character_name || "-",
+      discordName: player.display_name,
+      discordUsername: player.username,
+      discordStatus: cfx && player.status === "offline" ? "invisible" : player.status,
+      cfxName: player.cfx_name,
+      cfxServerID: cfx?.id,
+      cfxPing: cfx?.ping,
+      cfxConnected: Boolean(cfx),
+      cfxStatus: cfx ? "connected" : player.cfx_name ? "mismatched" : "not_set",
+      playtimeSeconds: player.current_playtime_seconds,
+    };
+  });
+  const unmatchedCFX: CombinedPlayer[] = data.cfx_players
+    .filter((player) => !matchedCFXNames.has(normalizeCFXName(player.name)))
+    .map((player) => ({
+      id: `cfx-${player.id}`,
+      characterName: "-",
+      discordName: "-",
+      discordUsername: "",
+      discordStatus: "mismatched",
+      cfxName: player.name,
+      cfxServerID: player.id,
+      cfxPing: player.ping,
+      cfxConnected: true,
+      cfxStatus: "connected",
+      playtimeSeconds: 0,
+    }));
+  return [...members.filter((player) => player.cfxConnected || player.discordStatus !== "offline"), ...unmatchedCFX];
 }
 
-function toDiscordRows(data: DashboardData | null): DirectoryPlayer[] {
-  return (data?.discord_players ?? []).map((player) => ({
-    id: String(player.member_id),
-    name: player.display_name,
-    identity: `@${player.username}`,
-    detail: player.character_name || "-",
-    status: player.status as DirectoryPlayer["status"],
-    playtimeSeconds: player.total_playtime_seconds,
-  }));
+function normalizeCFXName(value: string) {
+  return value.trim().toLocaleLowerCase();
 }
