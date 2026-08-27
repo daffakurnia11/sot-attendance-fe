@@ -22,6 +22,7 @@ const valid = {
   total_attended: 2,
   total_attendances: 3,
   cfx_players: [],
+  all_cfx_players: [],
   cfx_available: true,
 };
 

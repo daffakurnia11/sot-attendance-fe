@@ -13,6 +13,7 @@ describe("routes", () => {
     expect(routes.attendanceRecap).toBe("/attendance-recap");
     expect(routes.attendanceCalendar).toBe("/attendance-calendar");
     expect(routes.payslipRecap).toBe("/payslip-recap");
+    expect(routes.playerSearch).toBe("/player-search");
     expect(routes.craftingCalculator).toBe("/crafting-calculator");
     expect(routes.players.home).toBe("/players");
     expect(routes.players.tabs.discord).toBe("/players?view=discord");

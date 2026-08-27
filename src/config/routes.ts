@@ -10,6 +10,7 @@ export const routes = {
   attendanceRecap: "/attendance-recap",
   attendanceCalendar: "/attendance-calendar",
   payslipRecap: "/payslip-recap",
+  playerSearch: "/player-search",
   craftingCalculator: "/crafting-calculator",
   players: {
     home: "/players",

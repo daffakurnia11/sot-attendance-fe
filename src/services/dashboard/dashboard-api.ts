@@ -28,6 +28,7 @@ export const dashboardSchema = z.object({
   total_attended: z.number().int().nonnegative(),
   total_attendances: z.number().int().nonnegative(),
   cfx_players: z.array(cfxPlayerSchema),
+  all_cfx_players: z.array(cfxPlayerSchema),
   cfx_available: z.boolean(),
 });
 
