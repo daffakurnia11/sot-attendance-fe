@@ -105,10 +105,20 @@ jobs:
     timeout-minutes: 15
     environment: production
     steps:
+      - uses: actions/checkout@v4
+
+      # The droplet's copy of compose.production.yaml is what actually runs, so
+      # it has to travel with the deploy. Encoded rather than scp'd to avoid a
+      # second action and to keep quoting out of the shell.
+      - name: Encode the compose file
+        id: compose
+        run: echo "b64=$(base64 -w0 compose.production.yaml)" >> "$GITHUB_OUTPUT"
+
       - name: Pull and restart production image
         uses: appleboy/ssh-action@v1.2.2
         env:
           IMAGE: ${{ needs.build-app.outputs.image }}
+          COMPOSE_B64: ${{ steps.compose.outputs.b64 }}
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           APP_DIR: ${{ secrets.DO_APP_DIR }}
@@ -116,7 +126,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
-          envs: IMAGE,GHCR_USERNAME,GHCR_TOKEN,APP_DIR
+          envs: IMAGE,COMPOSE_B64,GHCR_USERNAME,GHCR_TOKEN,APP_DIR
           script: |
             set -eu
             cd "$APP_DIR"
@@ -137,10 +147,18 @@ jobs:
             done
 
             COMPOSE_FILE=compose.production.yaml
-            if [ ! -f "$COMPOSE_FILE" ]; then
-              echo "$COMPOSE_FILE is missing in $APP_DIR"
+
+            # Install the committed compose file rather than trusting whatever
+            # was last copied by hand. Validated with the real env before it
+            # replaces the running one, and swapped by rename so a failure here
+            # cannot leave a half-written file behind.
+            printf '%s' "$COMPOSE_B64" | base64 -d > "$COMPOSE_FILE.next"
+            if ! FRONTEND_IMAGE="$IMAGE" docker compose -f "$COMPOSE_FILE.next" config -q; then
+              echo "the committed $COMPOSE_FILE is not valid against this .env.production"
+              rm -f "$COMPOSE_FILE.next"
               exit 1
             fi
+            mv -f "$COMPOSE_FILE.next" "$COMPOSE_FILE"
 
             # compose declares FRONTEND_IMAGE as required, so persist the
             # deployed digest to .env (its default interpolation source).
