@@ -8,11 +8,13 @@ import {
   DataTableCell,
   dataTableRowClassName,
   OptionDropdown,
+  ReportExportButton,
   SectionHeader,
   StatisticCard,
 } from "@/components/atoms";
 import { DashboardPage } from "@/components/templates";
 import { useI18n } from "@/i18n";
+import { buildPayslipSheets } from "@/lib/report-export";
 import type { PayslipReport, PayslipSort } from "@/services/payslip";
 import { sortPayslipPlayers } from "@/services/payslip";
 
@@ -163,6 +165,12 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
       {error ? <Alert className="mt-4" type="error" showIcon title={t("Could not load selected month.")} /> : null}
       <div className={`mt-4 transition-opacity ${loading ? "opacity-45" : "opacity-100"}`} aria-busy={loading}>
         <DataTable
+          action={
+            <ReportExportButton
+              filename={`payslips-${report.period_start}-${report.period_end}`}
+              sheets={buildPayslipSheets(report)}
+            />
+          }
           code="PR"
           columns={[
             { label: "#" },

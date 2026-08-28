@@ -3,6 +3,7 @@ export * from "./data-table";
 export * from "./language-switcher";
 export * from "./option-dropdown";
 export * from "./page-header";
+export * from "./report-export-button";
 export * from "./section-header";
 export * from "./statistic-card";
 export * from "./table-pagination";

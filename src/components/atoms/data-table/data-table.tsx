@@ -6,6 +6,7 @@ import { useI18n } from "@/i18n";
 import { cn } from "@/lib";
 
 type DataTableProps = Readonly<{
+  action?: React.ReactNode;
   children: React.ReactNode;
   code: string;
   columns: Array<{ key?: string; label: string; className?: string }>;
@@ -16,7 +17,7 @@ type DataTableProps = Readonly<{
   toolbar?: React.ReactNode;
 }>;
 
-export function DataTable({ children, code, columns, empty, footer, summary, title, toolbar }: DataTableProps) {
+export function DataTable({ action, children, code, columns, empty, footer, summary, title, toolbar }: DataTableProps) {
   const hasRows = Children.count(children) > 0;
   const { translate } = useI18n();
   return (
@@ -30,11 +31,14 @@ export function DataTable({ children, code, columns, empty, footer, summary, tit
             {translate(title)}
           </h2>
         </div>
-        {summary ? (
-          <span className="whitespace-nowrap text-xs font-black tracking-[.14em] text-[var(--color-primary)] uppercase sm:text-right">
-            {summary}
-          </span>
-        ) : null}
+        <div className="flex items-center gap-3 self-stretch sm:self-auto">
+          {summary ? (
+            <span className="mr-auto whitespace-nowrap text-xs font-black tracking-[.14em] text-[var(--color-primary)] uppercase sm:text-right">
+              {summary}
+            </span>
+          ) : null}
+          {action}
+        </div>
       </header>
       {toolbar ? <div className="border-b border-[rgba(217,169,80,.14)] px-[18px] py-2.5">{toolbar}</div> : null}
       <div className="overflow-x-auto">

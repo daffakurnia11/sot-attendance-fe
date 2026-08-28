@@ -3,9 +3,10 @@
 import { Alert } from "antd";
 import { useRef, useState } from "react";
 
-import { OptionDropdown } from "@/components/atoms";
+import { OptionDropdown, ReportExportButton } from "@/components/atoms";
 import { DashboardPage } from "@/components/templates";
 import { useI18n } from "@/i18n";
+import { buildAttendanceSheet } from "@/lib/report-export";
 import type { AttendanceReport, AttendanceSort } from "@/services/attendance";
 import {
   getAttendanceSummary,
@@ -114,6 +115,12 @@ export function AttendanceView({
           </span>
           <span className="whitespace-nowrap rounded-full bg-[rgba(255,255,255,.04)] px-2 py-1 text-xs text-[var(--color-foreground-muted)]">
             {t("{count} attendance days", { count: report.attendance_days.length })}
+          </span>
+          <span className="ml-auto">
+            <ReportExportButton
+              filename={`attendance-${report.period_start}-${report.period_end}`}
+              sheets={[buildAttendanceSheet(report)]}
+            />
           </span>
         </div>
         {error ? <Alert className="m-3" type="error" showIcon title={t("Could not load selected month.")} /> : null}
