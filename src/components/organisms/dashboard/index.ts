@@ -5,6 +5,7 @@ export * from "./attendance-mode-tabs";
 export * from "./attendance-view";
 export * from "./dashboard-view";
 export * from "./member-records-view";
+export * from "./money-transactions-view";
 export * from "./payslip-view";
 export * from "./player-directory";
 export * from "./player-directory-live";

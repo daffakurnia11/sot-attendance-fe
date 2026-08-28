@@ -114,7 +114,10 @@ export function SettingsView({ initialCharacterName, initialCFXName, initialData
     const setSectionFeedback = section === "money" ? setMoneyFeedback : setFeedback;
     const parsed = settingsValuesSchema.safeParse(values);
     if (!parsed.success || parsed.data.start_attendance === parsed.data.end_attendance) {
-      setSectionFeedback({ type: "error", message: t("Use valid times, duration, counts, and attendance day range (1–31).") });
+      setSectionFeedback({
+        type: "error",
+        message: t("Use valid times, duration, counts, and attendance day range (1–31)."),
+      });
       return;
     }
     setSaving(true);

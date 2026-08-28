@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
 
 import { routes } from "@/config/routes";
+import { SESSION_COOKIE_CEILING_SECONDS } from "@/config/session";
 import { isDiscordAuthConfigured, serverEnv } from "@/lib/env.server";
 import type { AppMember } from "@/services/auth";
 import { authenticateDiscordMember } from "@/services/auth/auth.service.server";
@@ -18,7 +19,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   trustHost: true,
   session: {
     strategy: "jwt",
-    maxAge: serverEnv.AUTH_SESSION_MAX_AGE_SECONDS,
+    // A ceiling, not the session length. APP_JWT_TTL on the backend is the
+    // single control: the jwt callback clears the session as soon as the app
+    // token's expires_at passes, and the Go API rejects the token itself. Held
+    // at the backend's own maximum so this cookie can never be the shorter of
+    // the two, which is what made session length need editing in two repos.
+    maxAge: SESSION_COOKIE_CEILING_SECONDS,
   },
   logger: {
     error(error) {

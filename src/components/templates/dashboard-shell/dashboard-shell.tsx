@@ -39,7 +39,10 @@ const menuGroups = [
   },
   {
     label: "Business Zone",
-    items: [{ href: routes.craftingCalculator, label: "Crafting Calculator", icon: "CC" }],
+    items: [
+      { href: routes.craftingCalculator, label: "Crafting Calculator", icon: "CC" },
+      { href: routes.moneyTransactions.home, label: "Money Transactions", icon: "MT" },
+    ],
   },
   {
     label: "System",

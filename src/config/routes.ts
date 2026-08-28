@@ -11,6 +11,13 @@ export const routes = {
   attendanceCalendar: "/attendance-calendar",
   payslipRecap: "/payslip-recap",
   playerSearch: "/player-search",
+  moneyTransactions: {
+    home: "/money-transactions",
+    tabs: {
+      office: "/money-transactions?account=office",
+      dirty: "/money-transactions?account=dirty",
+    },
+  },
   craftingCalculator: "/crafting-calculator",
   players: {
     home: "/players",

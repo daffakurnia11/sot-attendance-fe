@@ -15,11 +15,7 @@ export const memberProfileSchema = z.object({
 });
 export type MemberProfile = z.infer<typeof memberProfileSchema>;
 
-export async function fetchMemberProfile(
-  baseURL: string,
-  accessToken: string,
-  fetcher: typeof fetch = fetch,
-) {
+export async function fetchMemberProfile(baseURL: string, accessToken: string, fetcher: typeof fetch = fetch) {
   const response = await fetcher(new URL("/api/v1/me/profile", baseURL), {
     headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
     cache: "no-store",

@@ -14,6 +14,9 @@ describe("routes", () => {
     expect(routes.attendanceCalendar).toBe("/attendance-calendar");
     expect(routes.payslipRecap).toBe("/payslip-recap");
     expect(routes.playerSearch).toBe("/player-search");
+    expect(routes.moneyTransactions.home).toBe("/money-transactions");
+    expect(routes.moneyTransactions.tabs.office).toBe("/money-transactions?account=office");
+    expect(routes.moneyTransactions.tabs.dirty).toBe("/money-transactions?account=dirty");
     expect(routes.craftingCalculator).toBe("/crafting-calculator");
     expect(routes.players.home).toBe("/players");
     expect(routes.players.tabs.discord).toBe("/players?view=discord");

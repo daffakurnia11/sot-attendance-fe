@@ -11,7 +11,9 @@ type Props = Readonly<{ eyebrow: string; initialData: DashboardData | null }>;
 
 export function PlayerDirectoryLive({ eyebrow, initialData }: Props) {
   const { data } = useLiveResource({ initialData, path: "/api/dashboard", fetcher: fetchDashboardRoute });
-  return <PlayerDirectory cfxAvailable={data?.cfx_available ?? false} eyebrow={eyebrow} players={combinePlayerLogs(data)} />;
+  return (
+    <PlayerDirectory cfxAvailable={data?.cfx_available ?? false} eyebrow={eyebrow} players={combinePlayerLogs(data)} />
+  );
 }
 
 export function combinePlayerLogs(data: DashboardData | null): CombinedPlayer[] {
