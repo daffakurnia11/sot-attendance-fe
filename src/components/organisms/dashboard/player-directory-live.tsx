@@ -35,7 +35,6 @@ export function combinePlayerLogs(data: DashboardData | null): CombinedPlayer[] 
       cfxPing: cfx?.ping,
       cfxConnected: Boolean(cfx),
       cfxStatus: cfx ? "connected" : player.cfx_name ? "mismatched" : "not_set",
-      playtimeSeconds: player.current_playtime_seconds,
     };
   });
   const unmatchedCFX: CombinedPlayer[] = data.cfx_players
@@ -51,7 +50,6 @@ export function combinePlayerLogs(data: DashboardData | null): CombinedPlayer[] 
       cfxPing: player.ping,
       cfxConnected: true,
       cfxStatus: "connected",
-      playtimeSeconds: 0,
     }));
   return [...members.filter((player) => player.cfxConnected || player.discordStatus !== "offline"), ...unmatchedCFX];
 }

@@ -3,7 +3,7 @@
 import { Alert } from "antd";
 import { useState } from "react";
 
-import { DataTable, DataTableCell, dataTableRowClassName, OptionDropdown } from "@/components/atoms";
+import { DataTable, DataTableCell, dataTableRowClassName } from "@/components/atoms";
 import { DashboardPage } from "@/components/templates";
 import { useI18n } from "@/i18n";
 
@@ -18,7 +18,6 @@ export type CombinedPlayer = {
   cfxPing?: number;
   cfxConnected: boolean;
   cfxStatus: PlayerPresenceStatus;
-  playtimeSeconds: number;
 };
 
 type PlayerPresenceStatus = "connecting" | "connected" | "offline" | "not_set" | "invisible" | "mismatched";
@@ -32,13 +31,8 @@ const statusPriority: Record<PlayerPresenceStatus, number> = {
   not_set: 5,
 };
 
-export function sortCombinedPlayers(players: CombinedPlayer[], playtimeSort: "default" | "highest" | "lowest") {
+export function sortCombinedPlayers(players: CombinedPlayer[]) {
   return [...players].sort((left, right) => {
-    if (playtimeSort !== "default") {
-      const direction = playtimeSort === "highest" ? -1 : 1;
-      const difference = (left.playtimeSeconds - right.playtimeSeconds) * direction;
-      if (difference) return difference;
-    }
     return (
       Number(right.cfxConnected) - Number(left.cfxConnected) ||
       statusPriority[left.discordStatus] - statusPriority[right.discordStatus] ||
@@ -58,7 +52,6 @@ export function PlayerDirectory({
   players: CombinedPlayer[];
 }) {
   const [query, setQuery] = useState("");
-  const [playtimeSort, setPlaytimeSort] = useState<"default" | "highest" | "lowest">("default");
   const { t } = useI18n();
   const normalizedQuery = query.trim().toLocaleLowerCase();
   let filteredPlayers = normalizedQuery
@@ -68,7 +61,7 @@ export function PlayerDirectory({
         ),
       )
     : players;
-  filteredPlayers = sortCombinedPlayers(filteredPlayers, playtimeSort);
+  filteredPlayers = sortCombinedPlayers(filteredPlayers);
   const discordConnected = players.filter((player) => player.discordStatus === "connected").length;
   const cfxConnected = players.filter((player) => player.cfxConnected).length;
 
@@ -90,7 +83,6 @@ export function PlayerDirectory({
             { label: t("Character Name") },
             { label: t("Discord Name") },
             { key: "cfx-name", label: "CFX" },
-            { label: t("Playtime"), className: "w-28" },
             { label: "Discord", className: "w-32" },
             { key: "cfx-status", label: "CFX", className: "w-32" },
           ]}
@@ -112,17 +104,6 @@ export function PlayerDirectory({
                 placeholder="Search character, Discord, or CFX name"
                 type="search"
                 value={query}
-              />
-              <OptionDropdown
-                ariaLabel={t("Sort by playtime")}
-                className="min-w-[154px]"
-                onChange={(value) => setPlaytimeSort(value as typeof playtimeSort)}
-                options={[
-                  { label: t("Default order"), value: "default" },
-                  { label: t("Playtime: highest"), value: "highest" },
-                  { label: t("Playtime: lowest"), value: "lowest" },
-                ]}
-                value={playtimeSort}
               />
               <span className="ml-auto text-xs font-black tracking-[.12em] text-[var(--color-primary-muted)] uppercase">
                 {t("{count} found", { count: filteredPlayers.length })}
@@ -154,7 +135,6 @@ export function PlayerDirectory({
                   </span>
                 ) : null}
               </DataTableCell>
-              <DataTableCell>{formatDuration(player.playtimeSeconds)}</DataTableCell>
               <DataTableCell>
                 <PlayerStatus status={player.discordStatus} />
               </DataTableCell>
@@ -167,10 +147,6 @@ export function PlayerDirectory({
       </div>
     </DashboardPage>
   );
-}
-
-function formatDuration(totalSeconds: number) {
-  return `${Math.floor(totalSeconds / 3600)}h ${Math.floor((totalSeconds % 3600) / 60)}m`;
 }
 
 function PlayerStatus({ status }: { status: PlayerPresenceStatus }) {

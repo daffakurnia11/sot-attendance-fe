@@ -13,7 +13,6 @@ const player = (overrides: Partial<CombinedPlayer>): CombinedPlayer => ({
   cfxName: "",
   cfxConnected: false,
   cfxStatus: "not_set",
-  playtimeSeconds: 0,
   ...overrides,
 });
 
@@ -24,7 +23,7 @@ describe("combined player logs", () => {
       player({ id: "discord", discordStatus: "connected" }),
       player({ id: "cfx", cfxConnected: true }),
     ];
-    expect(sortCombinedPlayers(players, "default").map(({ id }) => id)).toEqual(["cfx", "discord", "offline"]);
+    expect(sortCombinedPlayers(players).map(({ id }) => id)).toEqual(["cfx", "discord", "offline"]);
   });
 
   it("matches CFX names case-insensitively and preserves unmatched live players", () => {
