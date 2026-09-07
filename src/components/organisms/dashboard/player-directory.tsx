@@ -10,32 +10,57 @@ import { useI18n } from "@/i18n";
 export type CombinedPlayer = {
   id: string;
   characterName: string;
+  /** Discord identity: display name, then the handle beneath it. */
   discordName: string;
   discordUsername: string;
-  discordStatus: PlayerPresenceStatus;
-  cfxName: string;
+  discordStatus: DiscordStatus;
+  /** What the game server reported: the CFX name it knows them by, their
+   * character id, and the slot they hold while the visit is open. */
+  serverUsername: string;
+  serverCID: string;
+  serverID?: string;
+  serverStatus: ServerStatus;
   cfxServerID?: number;
   cfxPing?: number;
-  cfxConnected: boolean;
-  cfxStatus: PlayerPresenceStatus;
+  cfxStatus: CFXStatus;
 };
 
-type PlayerPresenceStatus = "connecting" | "connected" | "offline" | "not_set" | "invisible" | "mismatched";
+/**
+ * Discord cannot distinguish offline from invisible, so a present member reads
+ * connected and an absent one invisible. "unknown" is a third thing: live
+ * presence never arrived, so the column has nothing of its own to report.
+ *
+ * It keeps its own state (and its own hollow dot) rather than collapsing into
+ * invisible, because the two arrive by different paths and only one of them is
+ * an actual answer from Discord. Both READ as "Invisible" to the member: from
+ * the reader's side "Discord is not showing this person" is the same fact
+ * either way, and a bare "Unknown" told them nothing they could act on.
+ */
+// Discord presence is about being seen, not about being attached to anything,
+// so the states are visible and invisible: "connected" belonged to the server
+// and CFX columns and read as a third kind of connection here.
+//
+// Discord cannot tell offline from invisible, and presence the bot could not
+// reach is invisible too - from a reader's side all three are the same fact,
+// that this member cannot be seen. The banner above the table is what says
+// whether the source itself was reachable.
+type DiscordStatus = "visible" | "invisible";
+/** A visit is connecting or connected; once it ends the row leaves the table. */
+type ServerStatus = "connecting" | "connected";
+/** Polling means on the server but not yet in the polled CFX directory. */
+type CFXStatus = "connected" | "polling";
 
-const statusPriority: Record<PlayerPresenceStatus, number> = {
+type PlayerPresenceStatus = DiscordStatus | ServerStatus | CFXStatus;
+
+const statusPriority: Record<ServerStatus, number> = {
   connected: 0,
   connecting: 1,
-  mismatched: 2,
-  invisible: 3,
-  offline: 4,
-  not_set: 5,
 };
 
 export function sortCombinedPlayers(players: CombinedPlayer[]) {
   return [...players].sort((left, right) => {
     return (
-      Number(right.cfxConnected) - Number(left.cfxConnected) ||
-      statusPriority[left.discordStatus] - statusPriority[right.discordStatus] ||
+      statusPriority[left.serverStatus] - statusPriority[right.serverStatus] ||
       left.characterName.localeCompare(right.characterName) ||
       left.id.localeCompare(right.id, undefined, { numeric: true })
     );
@@ -44,10 +69,12 @@ export function sortCombinedPlayers(players: CombinedPlayer[]) {
 
 export function PlayerDirectory({
   cfxAvailable = true,
+  discordPresenceAvailable = true,
   eyebrow,
   players,
 }: {
   cfxAvailable?: boolean;
+  discordPresenceAvailable?: boolean;
   eyebrow: string;
   players: CombinedPlayer[];
 }) {
@@ -56,17 +83,25 @@ export function PlayerDirectory({
   const normalizedQuery = query.trim().toLocaleLowerCase();
   let filteredPlayers = normalizedQuery
     ? players.filter((player) =>
-        [player.characterName, player.discordName, player.discordUsername, player.cfxName].some((value) =>
-          value.toLocaleLowerCase().includes(normalizedQuery),
-        ),
+        [
+          player.characterName,
+          player.discordName,
+          player.discordUsername,
+          player.serverUsername,
+          player.serverCID,
+        ].some((value) => value.toLocaleLowerCase().includes(normalizedQuery)),
       )
     : players;
   filteredPlayers = sortCombinedPlayers(filteredPlayers);
-  const discordConnected = players.filter((player) => player.discordStatus === "connected").length;
-  const cfxConnected = players.filter((player) => player.cfxConnected).length;
+  const discordConnected = players.filter((player) => player.discordStatus === "visible").length;
+  const cfxConnected = players.filter((player) => player.cfxStatus === "connected").length;
 
   return (
-    <DashboardPage description={t("Live Discord and CFX player presence.")} eyebrow={eyebrow} title={t("Player Logs")}>
+    <DashboardPage
+      description={t("Players on the CR Roleplay server now, with their Discord and CFX status.")}
+      eyebrow={eyebrow}
+      title={t("Player Logs")}
+    >
       {!cfxAvailable ? (
         <Alert
           className="mt-6"
@@ -75,16 +110,23 @@ export function PlayerDirectory({
           title={t("{source} player source is unavailable.", { source: "CFX" })}
         />
       ) : null}
+      {!discordPresenceAvailable ? (
+        <Alert
+          className="mt-6"
+          type="warning"
+          showIcon
+          title={t("{source} player source is unavailable.", { source: "Discord" })}
+        />
+      ) : null}
       <div className="mt-[30px]">
         <DataTable
           code="PL"
           columns={[
             { label: "#", className: "w-14" },
             { label: t("Character Name") },
-            { label: t("Discord Name") },
-            { key: "cfx-name", label: "CFX" },
-            { label: "Discord", className: "w-32" },
-            { key: "cfx-status", label: "CFX", className: "w-32" },
+            { key: "discord-status", label: t("Discord Status"), className: "w-56" },
+            { key: "server-status", label: t("Server Status"), className: "w-80" },
+            { key: "cfx-status", label: t("CFX Status"), className: "w-40" },
           ]}
           empty={t("No matching players found.")}
           summary={`${discordConnected} Discord · ${cfxConnected} CFX · ${players.length} total`}
@@ -119,27 +161,30 @@ export function PlayerDirectory({
                 </span>
               </DataTableCell>
               <DataTableCell className="font-bold text-[var(--color-foreground)]">{player.characterName}</DataTableCell>
-              <DataTableCell>
-                {player.discordName}
-                {player.discordUsername ? (
-                  <span className="block text-[10px] text-[var(--color-foreground-muted)]">
-                    @{player.discordUsername}
-                  </span>
-                ) : null}
-              </DataTableCell>
-              <DataTableCell>
-                {player.cfxName || "Not Set"}
-                {player.cfxConnected ? (
-                  <span className="block text-[10px] text-[var(--color-foreground-muted)]">
-                    Server ID {player.cfxServerID} · {player.cfxPing}ms
-                  </span>
-                ) : null}
-              </DataTableCell>
+              {/* Each status cell leads with its pill, so all three start at
+                  their column's left edge and align down the table. Leading
+                  with the identifier put every pill at a different x and there
+                  was no column of statuses left to scan. The identifier it
+                  qualifies sits on one muted line beneath. */}
               <DataTableCell>
                 <PlayerStatus status={player.discordStatus} />
+                <span className="mt-1 block truncate text-[10px] text-[var(--color-foreground-muted)]">
+                  {discordIdentity(player) || "-"}
+                </span>
+              </DataTableCell>
+              <DataTableCell>
+                <PlayerStatus status={player.serverStatus} />
+                <span className="mt-1 block truncate text-[10px] text-[var(--color-foreground-muted)]">
+                  {serverIdentity(player) || "-"}
+                </span>
               </DataTableCell>
               <DataTableCell>
                 <PlayerStatus status={player.cfxStatus} />
+                {player.cfxStatus === "connected" ? (
+                  <span className="mt-1 block text-[10px] text-[var(--color-foreground-muted)]">
+                    {player.cfxPing}ms
+                  </span>
+                ) : null}
               </DataTableCell>
             </tr>
           ))}
@@ -149,27 +194,37 @@ export function PlayerDirectory({
   );
 }
 
+/**
+ * Always both the display name and the handle, even when the display name
+ * repeats the character name. Suppressing the repeat made the column
+ * inconsistent between rows, which reads as missing data rather than as tidy.
+ */
+function discordIdentity(player: CombinedPlayer) {
+  const handle = player.discordUsername ? `@${player.discordUsername}` : "";
+  return [player.discordName, handle].filter((value) => value && value !== "-").join(" · ");
+}
+
+function serverIdentity(player: CombinedPlayer) {
+  return [player.serverUsername, player.serverCID, player.serverID ? `ID ${player.serverID}` : ""]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function PlayerStatus({ status }: { status: PlayerPresenceStatus }) {
   const { translate } = useI18n();
   const styles = {
     connected: "text-[#78e99a] [&>i]:bg-[#57f287] [&>i]:shadow-[0_0_10px_rgba(87,242,135,.55)]",
+    visible: "text-[#78e99a] [&>i]:bg-[#57f287] [&>i]:shadow-[0_0_10px_rgba(87,242,135,.55)]",
     connecting: "text-[var(--color-primary-bright)] [&>i]:bg-[var(--color-primary)]",
-    offline: "text-[var(--color-foreground-muted)] [&>i]:bg-[#777067]",
-    not_set:
-      "text-[var(--color-foreground-muted)] [&>i]:bg-transparent [&>i]:border [&>i]:border-[var(--color-foreground-muted)]",
+    polling: "text-[var(--color-primary-bright)] [&>i]:bg-[var(--color-primary)]",
     invisible: "text-[var(--color-foreground-muted)] [&>i]:bg-[#777067]",
-    mismatched: "text-[#ff7474] [&>i]:bg-[#ed4245] [&>i]:shadow-[0_0_10px_rgba(237,66,69,.45)]",
   }[status];
-  const label =
-    status === "not_set"
-      ? "Not Set"
-      : status === "invisible"
-        ? "Invisible"
-        : status === "mismatched"
-          ? "Mismatched"
-          : translate(status);
+  // Every state goes through the dictionary, which holds each one lowercase and
+  // lets the CSS uppercase it. Three of these were hardcoded English and only
+  // the two older ones were ever translated.
+  const label = translate(status);
   return (
-    <span className={`flex items-center gap-[7px] text-xs font-black tracking-[.1em] uppercase ${styles}`}>
+    <span className={`flex shrink-0 items-center gap-[7px] text-xs font-black tracking-[.1em] uppercase ${styles}`}>
       <i className="h-1.5 w-1.5 rounded-full" />
       {label}
     </span>

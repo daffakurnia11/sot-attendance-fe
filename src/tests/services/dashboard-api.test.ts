@@ -6,12 +6,17 @@ const valid = {
   discord_players: [
     {
       member_id: 1,
+      discord_user_id: "111",
       username: "delta",
       display_name: "Delta",
       character_name: "",
       cfx_name: "SOT - Delta",
+      cid: "CID1",
+      server_id: null,
       started_at: null,
       status: "offline",
+      discord_status: "offline",
+      discord_playing: false,
       current_playtime_seconds: 0,
       total_playtime_seconds: 5400,
     },
@@ -24,6 +29,7 @@ const valid = {
   cfx_players: [],
   all_cfx_players: [],
   cfx_available: true,
+  discord_presence_available: true,
 };
 
 describe("fetchDashboard", () => {

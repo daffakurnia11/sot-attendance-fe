@@ -3,13 +3,23 @@ import { z } from "zod";
 import { createRouteFetcher } from "@/lib/route-fetcher";
 
 const playerSchema = z.object({
-  member_id: z.number().int().positive(),
+  /** Null when the game server reported a player who has no members row. */
+  member_id: z.number().int().positive().nullable(),
+  discord_user_id: z.string(),
   username: z.string(),
   display_name: z.string(),
   character_name: z.string(),
+  /** The player's CFX name, which is what `server_members.username` holds. */
   cfx_name: z.string(),
+  /** Character id, and the slot the game server gave the visit that is open now. */
+  cid: z.string(),
+  server_id: z.string().nullable(),
   started_at: z.iso.datetime().nullable(),
+  /** Game server presence: what the CR Roleplay webhook reported. */
   status: z.enum(["connecting", "connected", "offline"]),
+  /** Live Discord presence, pulled from the bot and stored nowhere. */
+  discord_status: z.enum(["online", "idle", "dnd", "offline", "invisible", "unknown"]),
+  discord_playing: z.boolean(),
   current_playtime_seconds: z.number().int().nonnegative(),
   total_playtime_seconds: z.number().int().nonnegative(),
 });
@@ -30,6 +40,7 @@ export const dashboardSchema = z.object({
   cfx_players: z.array(cfxPlayerSchema),
   all_cfx_players: z.array(cfxPlayerSchema),
   cfx_available: z.boolean(),
+  discord_presence_available: z.boolean(),
 });
 
 export type DashboardData = z.infer<typeof dashboardSchema>;

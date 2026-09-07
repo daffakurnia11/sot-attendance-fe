@@ -12,46 +12,73 @@ type Props = Readonly<{ eyebrow: string; initialData: DashboardData | null }>;
 export function PlayerDirectoryLive({ eyebrow, initialData }: Props) {
   const { data } = useLiveResource({ initialData, path: "/api/dashboard", fetcher: fetchDashboardRoute });
   return (
-    <PlayerDirectory cfxAvailable={data?.cfx_available ?? false} eyebrow={eyebrow} players={combinePlayerLogs(data)} />
+    <PlayerDirectory
+      cfxAvailable={data?.cfx_available ?? false}
+      discordPresenceAvailable={data?.discord_presence_available ?? false}
+      eyebrow={eyebrow}
+      players={combinePlayerLogs(data)}
+    />
   );
 }
 
+/**
+ * Builds one row per player the game server has on right now.
+ *
+ * The game server is the only authority on who is listed. A player it reports
+ * as disconnected leaves the table immediately, even while the CFX directory
+ * still lists them - that directory is polled, so it lags behind an exit by up
+ * to a poll interval, and honouring it would resurrect players who had already
+ * left. CFX only ever fills in the ping and the slot for players the server
+ * already vouches for.
+ *
+ * CFX is matched on the player's CFX name, which is the same
+ * `server_members.username` the webhook reports, compared case-insensitively.
+ */
 export function combinePlayerLogs(data: DashboardData | null): CombinedPlayer[] {
   if (!data) return [];
   const liveCFXByName = new Map(data.cfx_players.map((player) => [normalizeCFXName(player.name), player]));
-  const matchedCFXNames = new Set<string>();
-  const members: CombinedPlayer[] = data.discord_players.map((player) => {
-    const cfxKey = normalizeCFXName(player.cfx_name);
-    const cfx = cfxKey ? liveCFXByName.get(cfxKey) : undefined;
-    if (cfx) matchedCFXNames.add(cfxKey);
-    return {
-      id: `member-${player.member_id}`,
-      characterName: player.character_name || "-",
-      discordName: player.display_name,
-      discordUsername: player.username,
-      discordStatus: cfx && player.status === "offline" ? "invisible" : player.status,
-      cfxName: player.cfx_name,
-      cfxServerID: cfx?.id,
-      cfxPing: cfx?.ping,
-      cfxConnected: Boolean(cfx),
-      cfxStatus: cfx ? "connected" : player.cfx_name ? "mismatched" : "not_set",
-    };
-  });
-  const unmatchedCFX: CombinedPlayer[] = data.cfx_players
-    .filter((player) => !matchedCFXNames.has(normalizeCFXName(player.name)))
-    .map((player) => ({
-      id: `cfx-${player.id}`,
-      characterName: "-",
-      discordName: "-",
-      discordUsername: "",
-      discordStatus: "mismatched",
-      cfxName: player.name,
-      cfxServerID: player.id,
-      cfxPing: player.ping,
-      cfxConnected: true,
-      cfxStatus: "connected",
-    }));
-  return [...members.filter((player) => player.cfxConnected || player.discordStatus !== "offline"), ...unmatchedCFX];
+
+  const onServer: CombinedPlayer[] = data.discord_players
+    .filter((player) => player.status === "connecting" || player.status === "connected")
+    .map((player) => {
+      const cfxKey = normalizeCFXName(player.cfx_name);
+      const cfx = cfxKey ? liveCFXByName.get(cfxKey) : undefined;
+      return {
+        // Rows are per character now, and a character need not have a
+        // members row, so the character id is what identifies one.
+        id: `character-${player.cid || player.member_id}`,
+        characterName: player.character_name || "-",
+        discordName: player.display_name,
+        discordUsername: player.username,
+        discordStatus: discordPresence(player.discord_status),
+        serverUsername: player.cfx_name,
+        serverCID: player.cid,
+        serverID: player.server_id ?? undefined,
+        // The filter above leaves only these two; a visit that ended is gone.
+        serverStatus: player.status === "connected" ? ("connected" as const) : ("connecting" as const),
+        cfxServerID: cfx?.id,
+        cfxPing: cfx?.ping,
+        // The webhook reports a connection the moment it happens; the CFX
+        // directory is polled and lags behind it. Absent there is still
+        // catching up, not absent from the server.
+        cfxStatus: cfx ? ("connected" as const) : ("polling" as const),
+      };
+    });
+
+  return onServer;
+}
+
+/**
+ * Discord reports five states and cannot tell offline from invisible, so a
+ * member is either visible to the bot or not.
+ *
+ * Presence the bot could not reach at all reads invisible too: to a reader the
+ * fact is the same, that this member cannot be seen. Whether the source itself
+ * answered is reported once, by the banner above the table, rather than
+ * repeated on every row.
+ */
+function discordPresence(status: DashboardData["discord_players"][number]["discord_status"]) {
+  return status === "online" || status === "idle" || status === "dnd" ? ("visible" as const) : ("invisible" as const);
 }
 
 function normalizeCFXName(value: string) {
