@@ -28,13 +28,15 @@ const menuGroups = [
   },
   {
     label: "Attendance & Payouts",
-    // Roster-wide views: every member's attendance and everyone's payout.
-    adminOnly: true,
+    // Attendance and the player log are shared information; the search that
+    // reaches any member's record and everyone's payout are not. Marked per
+    // item rather than per group, so the group no longer disappears whole and
+    // members keep the two views that are theirs to see.
     items: [
       { href: routes.attendanceTabs.recap, label: "Attendance", icon: "AT" },
       { href: routes.players.home, label: "Player Logs", icon: "PL" },
-      { href: routes.playerSearch, label: "Player Search", icon: "PS" },
-      { href: routes.payslipRecap, label: "Payslip Recap", icon: "PR" },
+      { href: routes.playerSearch, label: "Player Search", icon: "PS", adminOnly: true },
+      { href: routes.payslipRecap, label: "Payslip Recap", icon: "PR", adminOnly: true },
     ],
   },
   {
@@ -46,7 +48,7 @@ const menuGroups = [
   },
   {
     label: "System",
-    items: [{ href: routes.settings, label: "Settings", icon: "ST" }],
+    items: [{ href: routes.settings, label: "Settings", icon: "ST", adminOnly: true }],
   },
 ];
 
@@ -80,7 +82,13 @@ export function DashboardShell({ children, displayName, isAdmin, username, logou
 
         <nav className="grid content-start gap-6 overflow-y-auto" aria-label={t("Member navigation")}>
           {menuGroups
-            .filter((group) => isAdmin || !("adminOnly" in group))
+            // A group is hidden when nothing in it survives the item filter,
+            // so an all-admin group leaves no empty heading behind.
+            .map((group) => ({
+              ...group,
+              items: group.items.filter((item) => isAdmin || !("adminOnly" in item)),
+            }))
+            .filter((group) => (isAdmin || !("adminOnly" in group)) && group.items.length > 0)
             .map((group) => (
               <div key={group.label}>
                 <p className="mb-2 px-3.5 text-xs leading-none font-extrabold tracking-[.22em] text-[var(--color-primary-muted)] uppercase">

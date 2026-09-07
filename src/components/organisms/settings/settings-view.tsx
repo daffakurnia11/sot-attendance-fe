@@ -5,11 +5,10 @@ import { useState } from "react";
 
 import { Button } from "@/components/atoms";
 import { useI18n } from "@/i18n";
-import { memberProfileSchema } from "@/services/member-profile";
 import type { SettingsData } from "@/services/settings";
 import { formatIDRInput, normalizeCurrencyInput, settingsSchema, settingsValuesSchema } from "@/services/settings";
 
-type Props = Readonly<{ initialCharacterName: string; initialCFXName: string; initialData: SettingsData | null }>;
+type Props = Readonly<{ initialData: SettingsData | null }>;
 
 const fields = [
   {
@@ -62,53 +61,14 @@ const fields = [
   },
 ] as const;
 
-export function SettingsView({ initialCharacterName, initialCFXName, initialData }: Props) {
+export function SettingsView({ initialData }: Props) {
   const [values, setValues] = useState<SettingsData | null>(initialData);
-  const [characterName, setCharacterName] = useState(initialCharacterName);
-  const [cfxName, setCFXName] = useState(initialCFXName);
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileFeedback, setProfileFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [moneyFeedback, setMoneyFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const { t, translate } = useI18n();
 
   if (!values) return <Alert className="mt-7" type="error" showIcon title={t("Settings could not be loaded.")} />;
-
-  async function saveProfile() {
-    const parsed = memberProfileSchema.safeParse({ character_name: characterName, cfx_name: cfxName });
-    if (!parsed.success) {
-      setProfileFeedback({ type: "error", message: t("Character name must contain 1 to 80 characters.") });
-      return;
-    }
-    setProfileSaving(true);
-    setProfileFeedback(null);
-    try {
-      const response = await fetch("/api/me/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
-      });
-      const payload: unknown = await response.json().catch(() => null);
-      if (!response.ok)
-        throw new Error(
-          typeof payload === "object" && payload && "error" in payload && typeof payload.error === "string"
-            ? payload.error
-            : t("Profile could not be saved."),
-        );
-      const updated = memberProfileSchema.parse(payload);
-      setCharacterName(updated.character_name);
-      setCFXName(updated.cfx_name);
-      setProfileFeedback({ type: "success", message: t("Profile saved.") });
-    } catch (error) {
-      setProfileFeedback({
-        type: "error",
-        message: translate(error instanceof Error ? error.message : t("Profile could not be saved.")),
-      });
-    } finally {
-      setProfileSaving(false);
-    }
-  }
 
   async function save(section: "attendance" | "money" = "attendance") {
     const setSectionFeedback = section === "money" ? setMoneyFeedback : setFeedback;
@@ -153,55 +113,6 @@ export function SettingsView({ initialCharacterName, initialCFXName, initialData
 
   return (
     <div className="mt-7 grid gap-6">
-      <section className="border border-[var(--color-border)] bg-[rgba(242,182,61,.025)]">
-        <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-5">
-          <h2 className="font-[Impact] text-2xl font-normal uppercase">{t("My profile")}</h2>
-          <p className="mt-1 text-sm text-[var(--color-foreground-muted)]">{t("Settings for authenticated member.")}</p>
-        </div>
-        <div className="grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
-          <label className="grid gap-2">
-            <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
-              {t("Character name")}
-            </span>
-            <Input
-              className="h-11 border-[var(--color-border)] bg-[rgba(7,6,5,.7)] px-3 text-base"
-              maxLength={80}
-              value={characterName}
-              onChange={(event) => setCharacterName(event.target.value)}
-            />
-            <span className="text-xs text-[var(--color-foreground-muted)]">
-              {t("Name shown in attendance recap and player records.")}
-            </span>
-          </label>
-          <label className="grid gap-2">
-            <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
-              {t("CFX name")}
-            </span>
-            <Input
-              className="h-11 border-[var(--color-border)] bg-[rgba(7,6,5,.7)] px-3 text-base"
-              maxLength={80}
-              value={cfxName}
-              onChange={(event) => setCFXName(event.target.value)}
-            />
-            <span className="text-xs text-[var(--color-foreground-muted)]">
-              {t("Player name used on CFX server. Leave blank when not registered.")}
-            </span>
-          </label>
-        </div>
-        <div className="flex flex-col gap-3 border-t border-[var(--color-border)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div aria-live="polite">
-            {profileFeedback ? <Alert type={profileFeedback.type} showIcon title={profileFeedback.message} /> : null}
-          </div>
-          <Button
-            loading={profileSaving}
-            disabled={profileSaving}
-            onClick={saveProfile}
-            className="h-11 px-6 font-extrabold uppercase"
-          >
-            {t("Save profile")}
-          </Button>
-        </div>
-      </section>
       <section className="border border-[var(--color-border)] bg-[rgba(242,182,61,.025)]">
         <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-5">
           <h2 className="font-[Impact] text-2xl font-normal uppercase">{t("Attendance settings")}</h2>
