@@ -5,6 +5,7 @@ import {
   calculateCraftingBatch,
   craftingBatchRequestSchema,
   craftingRequestSchema,
+  craftingStoreStockRequestSchema,
   fetchCraftingRecipes,
 } from "@/services/crafting";
 
@@ -27,7 +28,18 @@ const batchCalculation = {
   total_requested_quantity: 3,
   total_craft_count: 3,
   total_crafting_time_seconds: 24,
-  ingredients: [{ item_code: "iron", item_name: "Iron", total_quantity: 75 }],
+  stock_available: true,
+  ingredients: [
+    {
+      item_code: "iron",
+      item_name: "Iron",
+      total_quantity: 75,
+      public_quantity: 40,
+      boss_quantity: 30,
+      available_total: 70,
+      missing_quantity: 5,
+    },
+  ],
 };
 
 describe("crafting API", () => {
@@ -77,6 +89,23 @@ describe("crafting API", () => {
           { weapon_code: "mp9", quantity: 1 },
           { weapon_code: "mp9", quantity: 2 },
         ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("validates store stock requests", () => {
+    expect(
+      craftingStoreStockRequestSchema.safeParse({
+        recipes: [{ weapon_code: "vector", quantity: 1 }],
+        destination: "boss",
+        idempotency_key: "3d594650-3436-4b2e-9ddd-e40d4bca192d",
+      }).success,
+    ).toBe(true);
+    expect(
+      craftingStoreStockRequestSchema.safeParse({
+        recipes: [{ weapon_code: "vector", quantity: 1 }],
+        destination: "vault",
+        idempotency_key: "reused-key",
       }).success,
     ).toBe(false);
   });

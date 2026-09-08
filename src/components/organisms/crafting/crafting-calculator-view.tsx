@@ -1,14 +1,14 @@
 "use client";
 
-import { Alert } from "antd";
+import { Alert, Select } from "antd";
 import { useState } from "react";
 
-import { Button,ItemQuantityCard, QuantityItemRow, ResourceState, SplitPanel } from "@/components/atoms";
+import { Button, ItemQuantityCard, QuantityItemRow, ResourceState, SplitPanel } from "@/components/atoms";
 import { useI18n } from "@/i18n";
 import type { CraftingBatchCalculation, CraftingRecipes } from "@/services/crafting";
 import { craftingBatchCalculationSchema, craftingBatchRequestSchema } from "@/services/crafting";
 
-type Props = Readonly<{ initialData: CraftingRecipes | null }>;
+type Props = Readonly<{ initialData: CraftingRecipes | null; isAdmin: boolean }>;
 type RecipeInput = { id: number; weapon_code: string; quantity: number };
 
 function formatDuration(seconds: number) {
@@ -20,7 +20,7 @@ function formatDuration(seconds: number) {
     .join(" ");
 }
 
-export function CraftingCalculatorView({ initialData }: Props) {
+export function CraftingCalculatorView({ initialData, isAdmin }: Props) {
   const { t, translate } = useI18n();
   const recipes = initialData?.recipes ?? [];
   const [inputs, setInputs] = useState<RecipeInput[]>([
@@ -30,6 +30,10 @@ export function CraftingCalculatorView({ initialData }: Props) {
   const [calculation, setCalculation] = useState<CraftingBatchCalculation | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [storeSuccess, setStoreSuccess] = useState<string | null>(null);
+  const [storing, setStoring] = useState(false);
+  const [destination, setDestination] = useState<"public" | "boss">("boss");
+  const [pendingStore, setPendingStore] = useState<{ input: string; key: string } | null>(null);
 
   async function calculate() {
     const input = craftingBatchRequestSchema.safeParse({
@@ -61,6 +65,8 @@ export function CraftingCalculatorView({ initialData }: Props) {
   function updateInput(id: number, values: Partial<Omit<RecipeInput, "id">>) {
     setInputs((current) => current.map((input) => (input.id === id ? { ...input, ...values } : input)));
     setCalculation(null);
+    setStoreSuccess(null);
+    setPendingStore(null);
   }
 
   function addInput() {
@@ -70,18 +76,57 @@ export function CraftingCalculatorView({ initialData }: Props) {
     setInputs((current) => [...current, { id: nextInputID, weapon_code: nextRecipe.weapon_code, quantity: 1 }]);
     setNextInputID((current) => current + 1);
     setCalculation(null);
+    setStoreSuccess(null);
+    setPendingStore(null);
   }
 
   function removeInput(id: number) {
     setInputs((current) => current.filter((input) => input.id !== id));
     setCalculation(null);
+    setStoreSuccess(null);
+    setPendingStore(null);
+  }
+
+  async function storeStock() {
+    if (!calculation || calculation.ingredients.some((ingredient) => ingredient.missing_quantity > 0)) return;
+    const request = { recipes: inputs.map(({ weapon_code, quantity }) => ({ weapon_code, quantity })), destination };
+    const input = JSON.stringify(request);
+    const key = pendingStore?.input === input ? pendingStore.key : crypto.randomUUID();
+    setPendingStore({ input, key });
+    setStoring(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/crafting/store-stock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...request, idempotency_key: key }),
+      });
+      if (!response.ok) {
+        const payload: unknown = await response.json().catch(() => null);
+        throw new Error(
+          payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
+            ? payload.error
+            : "Crafting stock could not be stored.",
+        );
+      }
+      setPendingStore(null);
+      setStoreSuccess("Crafting stock stored successfully.");
+      await calculate();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Crafting stock could not be stored.");
+    } finally {
+      setStoring(false);
+    }
   }
 
   if (!initialData) return <ResourceState state="unavailable" message="Crafting recipes could not be loaded." />;
 
   return (
     <div className="mt-5 grid gap-3">
-      <div aria-live="polite">{error ? <Alert type="error" showIcon title={translate(error)} /> : null}</div>
+      <div aria-live="polite">
+        {error ? <Alert type="error" showIcon title={translate(error)} /> : null}
+        {storeSuccess ? <Alert type="success" showIcon title={translate(storeSuccess)} /> : null}
+      </div>
 
       <SplitPanel
         sidebar={
@@ -133,6 +178,30 @@ export function CraftingCalculatorView({ initialData }: Props) {
             >
               {translate("Calculate")}
             </Button>
+            {isAdmin && calculation ? (
+              <div className="grid gap-2 border-t border-[var(--color-border)] pt-4">
+                <Select
+                  aria-label={t("Crafted weapon destination")}
+                  disabled={storing}
+                  onChange={(value) => {
+                    setDestination(value);
+                    setPendingStore(null);
+                  }}
+                  options={[
+                    { label: t("Public Stash"), value: "public" },
+                    { label: t("Boss Stash"), value: "boss" },
+                  ]}
+                  value={destination}
+                />
+                <Button
+                  disabled={storing || calculation.ingredients.some((ingredient) => ingredient.missing_quantity > 0)}
+                  loading={storing}
+                  onClick={storeStock}
+                >
+                  {translate("Store Stock")}
+                </Button>
+              </div>
+            ) : null}
           </>
         }
       >
@@ -175,7 +244,16 @@ export function CraftingCalculatorView({ initialData }: Props) {
                   index={index + 1}
                   name={ingredient.item_name}
                   quantity={ingredient.total_quantity}
-                  note="All selected recipes"
+                  quantityIntent={ingredient.missing_quantity > 0 ? "danger" : "success"}
+                  note="Required amount"
+                  details={
+                    calculation.stock_available
+                      ? [
+                          { label: "Public Stash", quantity: ingredient.public_quantity },
+                          { label: "Boss Stash", quantity: ingredient.boss_quantity },
+                        ]
+                      : undefined
+                  }
                 />
               ))}
             </div>

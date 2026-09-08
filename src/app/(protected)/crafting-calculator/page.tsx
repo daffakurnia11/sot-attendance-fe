@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CraftingCalculatorView } from "@/components/organisms";
 import { DashboardPage } from "@/components/templates";
+import { isAdminSession } from "@/lib/session.server";
 import { loadCraftingRecipes } from "@/services/crafting/crafting.service.server";
 
 export const metadata: Metadata = { title: "Crafting Calculator" };
@@ -13,7 +14,7 @@ export default async function CraftingCalculatorPage() {
       eyebrow="Business operations"
       title="Crafting Calculator"
     >
-      <CraftingCalculatorView initialData={await loadCraftingRecipes()} />
+      <CraftingCalculatorView initialData={await loadCraftingRecipes()} isAdmin={await isAdminSession()} />
     </DashboardPage>
   );
 }

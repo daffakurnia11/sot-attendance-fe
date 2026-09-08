@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { SWRConfig } from "swr";
 import { describe, expect, it } from "vitest";
 
-import { DataTable, QuantityItemRow, RouteTabs } from "@/components/atoms";
+import { DataTable, ItemQuantityCard, QuantityItemRow, RouteTabs } from "@/components/atoms";
 import { AttendanceView } from "@/components/organisms/dashboard/attendance-view";
 import { SafeboxStockView } from "@/components/organisms/safebox-stock";
 import { DashboardPage } from "@/components/templates/dashboard-page";
@@ -104,5 +104,28 @@ describe("shared design flows", () => {
     expect(html).toContain('aria-label="Remove Weapon 1"');
     expect(translateMessage("id", "Item {number}", { number: 2 })).toBe("Barang 2");
     expect(translateMessage("id", "Recipe input")).toBe("Input resep");
+  });
+
+  it("colors required material totals by stash sufficiency", () => {
+    const enough = render(
+      createElement(ItemQuantityCard, {
+        index: 1,
+        name: "Iron",
+        quantity: 100,
+        quantityIntent: "success",
+        note: "Required amount",
+      }),
+    );
+    const short = render(
+      createElement(ItemQuantityCard, {
+        index: 1,
+        name: "Iron",
+        quantity: 100,
+        quantityIntent: "danger",
+        note: "Required amount",
+      }),
+    );
+    expect(enough).toContain("text-[var(--color-success)]");
+    expect(short).toContain("text-[var(--color-danger-soft)]");
   });
 });

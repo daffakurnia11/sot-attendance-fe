@@ -41,16 +41,26 @@ export const craftingBatchRequestSchema = z.object({
     }),
 });
 
+export const craftingStoreStockRequestSchema = craftingBatchRequestSchema.extend({
+  destination: z.enum(["public", "boss"]),
+  idempotency_key: z.string().uuid(),
+});
+
 export const craftingBatchCalculationSchema = z.object({
   recipes: z.array(craftingCalculationSchema).min(1).max(20),
   total_requested_quantity: z.number().int().positive(),
   total_craft_count: z.number().int().positive(),
   total_crafting_time_seconds: z.number().int().positive(),
+  stock_available: z.boolean(),
   ingredients: z.array(
     z.object({
       item_code: z.string().min(1),
       item_name: z.string().min(1),
       total_quantity: z.number().int().positive(),
+      public_quantity: z.number().int().nonnegative(),
+      boss_quantity: z.number().int().nonnegative(),
+      available_total: z.number().int().nonnegative(),
+      missing_quantity: z.number().int().nonnegative(),
     }),
   ),
 });
@@ -60,6 +70,7 @@ export type CraftingCalculation = z.infer<typeof craftingCalculationSchema>;
 export type CraftingRequest = z.infer<typeof craftingRequestSchema>;
 export type CraftingBatchRequest = z.infer<typeof craftingBatchRequestSchema>;
 export type CraftingBatchCalculation = z.infer<typeof craftingBatchCalculationSchema>;
+export type CraftingStoreStockRequest = z.infer<typeof craftingStoreStockRequestSchema>;
 
 export async function fetchCraftingRecipes(baseURL: string, accessToken: string, fetcher: typeof fetch = fetch) {
   const response = await fetcher(new URL("/api/v1/crafting/recipes", baseURL), {
