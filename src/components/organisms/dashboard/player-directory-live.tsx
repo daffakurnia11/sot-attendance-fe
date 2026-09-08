@@ -1,5 +1,6 @@
 "use client";
 
+import { ResourceState } from "@/components/atoms";
 import { useLiveResource } from "@/hooks/use-live-resource";
 import type { DashboardData } from "@/services/dashboard";
 import { fetchDashboardRoute } from "@/services/dashboard";
@@ -7,17 +8,37 @@ import { fetchDashboardRoute } from "@/services/dashboard";
 import type { CombinedPlayer } from "./player-directory";
 import { PlayerDirectory } from "./player-directory";
 
-type Props = Readonly<{ eyebrow: string; initialData: DashboardData | null }>;
+type Props = Readonly<{ initialData: DashboardData | null }>;
 
-export function PlayerDirectoryLive({ eyebrow, initialData }: Props) {
-  const { data } = useLiveResource({ initialData, path: "/api/dashboard", fetcher: fetchDashboardRoute });
+export function PlayerDirectoryLive({ initialData }: Props) {
+  const { data, stale, failed, retry, isLoading } = useLiveResource({
+    initialData,
+    path: "/api/dashboard",
+    fetcher: fetchDashboardRoute,
+  });
+  if (!data)
+    return (
+      <ResourceState
+        state={isLoading ? "loading" : "unavailable"}
+        message={isLoading ? "Loading data..." : "Data could not be loaded."}
+        onRetry={() => void retry()}
+      />
+    );
   return (
-    <PlayerDirectory
-      cfxAvailable={data?.cfx_available ?? false}
-      discordPresenceAvailable={data?.discord_presence_available ?? false}
-      eyebrow={eyebrow}
-      players={combinePlayerLogs(data)}
-    />
+    <>
+      {stale || failed ? (
+        <ResourceState
+          state="stale"
+          message={stale ? "Live updates stopped. Sign in again to resume." : "Data could not be refreshed."}
+          onRetry={() => void retry()}
+        />
+      ) : null}
+      <PlayerDirectory
+        cfxAvailable={data?.cfx_available ?? false}
+        discordPresenceAvailable={data?.discord_presence_available ?? false}
+        players={combinePlayerLogs(data)}
+      />
+    </>
   );
 }
 

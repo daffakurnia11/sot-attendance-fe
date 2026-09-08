@@ -5,6 +5,8 @@ import { Children } from "react";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib";
 
+import { Panel } from "../panel";
+
 type DataTableProps = Readonly<{
   action?: React.ReactNode;
   children: React.ReactNode;
@@ -21,30 +23,11 @@ export function DataTable({ action, children, code, columns, empty, footer, summ
   const hasRows = Children.count(children) > 0;
   const { translate } = useI18n();
   return (
-    <section className="overflow-hidden border border-[var(--color-border)] bg-[linear-gradient(145deg,rgba(242,182,61,.055),rgba(255,255,255,.01))] shadow-[inset_0_3px_0_rgba(242,182,61,.2)]">
-      <header className="flex min-h-[52px] flex-col items-start justify-between gap-2 border-b border-[var(--color-border)] px-[18px] py-3 sm:flex-row sm:items-center sm:gap-4">
-        <div className="flex items-center gap-[11px] uppercase">
-          <span className="grid h-[30px] w-[30px] shrink-0 place-items-center border border-[var(--color-border)] text-xs font-black text-[var(--color-primary)]">
-            {code}
-          </span>
-          <h2 className="whitespace-nowrap font-[Impact] text-[22px] font-normal tracking-[.04em] uppercase">
-            {translate(title)}
-          </h2>
-        </div>
-        <div className="flex items-center gap-3 self-stretch sm:self-auto">
-          {summary ? (
-            <span className="mr-auto whitespace-nowrap text-xs font-black tracking-[.14em] text-[var(--color-primary)] uppercase sm:text-right">
-              {summary}
-            </span>
-          ) : null}
-          {action}
-        </div>
-      </header>
-      {toolbar ? <div className="border-b border-[rgba(217,169,80,.14)] px-[18px] py-2.5">{toolbar}</div> : null}
+    <Panel action={action} code={code} title={title} summary={summary} toolbar={toolbar} footer={footer}>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse text-left text-xs">
           <thead>
-            <tr className="border-b border-[rgba(217,169,80,.14)] text-xs font-black tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
+            <tr className="border-b border-[var(--color-border-subtle)] text-xs font-black tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
               {columns.map((column) => (
                 <th className={cn("px-[18px] py-2.5", column.className)} key={column.key ?? column.label}>
                   {translate(column.label)}
@@ -68,8 +51,7 @@ export function DataTable({ action, children, code, columns, empty, footer, summ
           </tbody>
         </table>
       </div>
-      {footer ? <footer className="border-t border-[rgba(217,169,80,.14)]">{footer}</footer> : null}
-    </section>
+    </Panel>
   );
 }
 

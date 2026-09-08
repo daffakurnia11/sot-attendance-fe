@@ -1,7 +1,6 @@
 "use client";
 
-import { Modal, Tabs } from "antd";
-
+import { AttendanceDetailDialog } from "@/components/atoms";
 import { useI18n } from "@/i18n";
 import type { AttendanceDayMember, AttendanceReport } from "@/services/attendance";
 import { getAttendanceDayDetail } from "@/services/attendance";
@@ -22,14 +21,14 @@ export function AttendanceDayDetail({ date, onClose, report }: Props) {
 
   const detail = getAttendanceDayDetail(report, date);
   const groups = [
-    { key: "attended", accent: "#55dfbd", label: t("Attended"), members: detail.attended, showPlaytime: true },
-    { key: "missed", accent: "#ef7474", label: t("Not Attended"), members: detail.missed, showPlaytime: true },
+    { key: "attended", tone: "success" as const, label: t("Attended"), members: detail.attended, showPlaytime: true },
+    { key: "missed", tone: "danger" as const, label: t("Not Attended"), members: detail.missed, showPlaytime: true },
     // Playtime is shown for a recorded miss because the row holds a real
     // session that fell short, which is the useful part. Unrecorded has no row
     // at all, so its zero would be an invention.
     {
       key: "unrecorded",
-      accent: "var(--color-foreground-muted)",
+      tone: "muted" as const,
       label: t("Not Recorded"),
       members: detail.unrecorded,
       showPlaytime: false,
@@ -37,35 +36,29 @@ export function AttendanceDayDetail({ date, onClose, report }: Props) {
   ];
 
   return (
-    <Modal centered footer={null} onCancel={onClose} open title={formatFullDate(date, locale)} width={640}>
-      <p className="text-sm text-[var(--color-foreground-muted)]">
-        {t("{attended} of {roster} members attended", { attended: detail.attended.length, roster: detail.roster })}
-      </p>
-      <Tabs
-        defaultActiveKey="attended"
-        items={groups.map((group) => ({
-          key: group.key,
-          label: (
-            <span className="flex items-center gap-2 text-xs font-extrabold tracking-[.1em] uppercase">
-              <i
-                className="h-2 w-2 shrink-0 rounded-full"
-                style={{ backgroundColor: group.accent }}
-                aria-hidden="true"
-              />
-              {group.label}
-              <span className="text-[var(--color-foreground-muted)]">{group.members.length}</span>
-            </span>
-          ),
-          children: (
-            <MemberList
-              emptyLabel={t("No members in this group.")}
-              members={group.members}
-              showPlaytime={group.showPlaytime}
-            />
-          ),
-        }))}
-      />
-    </Modal>
+    <AttendanceDetailDialog
+      title={formatFullDate(date, locale)}
+      onClose={onClose}
+      summary={
+        <>
+          {" "}
+          {t("{attended} of {roster} members attended", { attended: detail.attended.length, roster: detail.roster })}
+        </>
+      }
+      groups={groups.map((group) => ({
+        key: group.key,
+        label: group.label,
+        tone: group.tone,
+        count: group.members.length,
+        children: (
+          <MemberList
+            emptyLabel={t("No members in this group.")}
+            members={group.members}
+            showPlaytime={group.showPlaytime}
+          />
+        ),
+      }))}
+    />
   );
 }
 

@@ -3,7 +3,7 @@
 import { Alert, Input } from "antd";
 import { useState } from "react";
 
-import { Button } from "@/components/atoms";
+import { Button,Field, FormSection, ResourceState } from "@/components/atoms";
 import { useI18n } from "@/i18n";
 import type { SettingsData } from "@/services/settings";
 import { formatIDRInput, normalizeCurrencyInput, settingsSchema, settingsValuesSchema } from "@/services/settings";
@@ -68,7 +68,7 @@ export function SettingsView({ initialData }: Props) {
   const [moneyFeedback, setMoneyFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const { t, translate } = useI18n();
 
-  if (!values) return <Alert className="mt-7" type="error" showIcon title={t("Settings could not be loaded.")} />;
+  if (!values) return <ResourceState state="unavailable" message={t("Settings could not be loaded.")} />;
 
   async function save(section: "attendance" | "money" = "attendance") {
     const setSectionFeedback = section === "money" ? setMoneyFeedback : setFeedback;
@@ -113,142 +113,138 @@ export function SettingsView({ initialData }: Props) {
 
   return (
     <div className="mt-7 grid gap-6">
-      <section className="border border-[var(--color-border)] bg-[rgba(242,182,61,.025)]">
-        <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-5">
-          <h2 className="font-[Impact] text-2xl font-normal uppercase">{t("Attendance settings")}</h2>
-          <p className="mt-1 text-sm text-[var(--color-foreground-muted)]">
+      <FormSection
+        title={<>{t("Attendance settings")}</>}
+        description={
+          <>
             {values.is_admin
               ? t("Values stored in settings table.")
               : t("Read-only. Administrator role required to edit.")}
-          </p>
-        </div>
-        <div className="grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
-          {fields.map((field) => (
-            <label className="grid gap-2" key={field.key}>
-              <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
-                {translate(field.label)}
-              </span>
-              <Input
-                className="h-11 border-[var(--color-border)] bg-[rgba(7,6,5,.7)] px-3 text-base"
-                disabled={!values.is_admin}
-                inputMode={
-                  ["payment_contract", "attendance_minimum", "attendance_maximum", "start_date_contract"].includes(
-                    field.key,
-                  )
-                    ? "numeric"
-                    : undefined
-                }
-                prefix={field.key === "payment_contract" ? "Rp." : undefined}
-                suffix={
-                  ["attendance_minimum", "attendance_maximum"].includes(field.key)
-                    ? t("days/month")
-                    : field.key === "start_date_contract"
-                      ? t("day of month")
-                      : undefined
-                }
-                value={field.key === "payment_contract" ? formatIDRInput(values[field.key]) : values[field.key]}
-                placeholder={field.placeholder}
-                onChange={(event) =>
-                  setValues((current) =>
-                    current
-                      ? {
-                          ...current,
-                          [field.key]:
-                            field.key === "payment_contract"
-                              ? normalizeCurrencyInput(event.target.value)
-                              : event.target.value,
-                        }
-                      : current,
-                  )
-                }
-              />
-              <span className="text-xs text-[var(--color-foreground-muted)]">{translate(field.help)}</span>
-            </label>
-          ))}
-        </div>
-        <div className="flex flex-col gap-3 border-t border-[var(--color-border)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div aria-live="polite">
-            {feedback ? <Alert type={feedback.type} showIcon title={feedback.message} /> : null}
-          </div>
-          <Button
-            loading={saving}
-            disabled={saving || !values.is_admin}
-            onClick={() => save("attendance")}
-            className="h-11 px-6 font-extrabold uppercase"
-          >
-            {values.is_admin ? t("Save settings") : t("Admin required")}
-          </Button>
-        </div>
-      </section>
-      <section className="border border-[var(--color-border)] bg-[rgba(242,182,61,.025)]">
-        <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-5">
-          <h2 className="font-[Impact] text-2xl font-normal uppercase">{t("Money settings")}</h2>
-          <p className="mt-1 text-sm text-[var(--color-foreground-muted)]">
-            {t("Current office and dirty money balances.")}
-          </p>
-        </div>
-        <div className="grid gap-5 p-4 sm:grid-cols-2 sm:p-5">
-          <label className="grid gap-2">
-            <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
-              {t("Office money")}
-            </span>
+          </>
+        }
+        footer={
+          <>
+            <div aria-live="polite">
+              {feedback ? <Alert type={feedback.type} showIcon title={feedback.message} /> : null}
+            </div>
+            <Button
+              loading={saving}
+              disabled={saving || !values.is_admin}
+              onClick={() => save("attendance")}
+              className="h-11 px-6 font-extrabold uppercase"
+            >
+              {values.is_admin ? t("Save settings") : t("Admin required")}
+            </Button>
+          </>
+        }
+      >
+        {fields.map((field) => (
+          <Field key={field.key} label={<>{translate(field.label)}</>} help={<>{translate(field.help)}</>}>
             <Input
-              aria-label={t("Current office money balance")}
-              className="h-11 border-[var(--color-border)] bg-[rgba(7,6,5,.7)] px-3 text-base"
+              className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
               disabled={!values.is_admin}
-              inputMode="numeric"
-              prefix="$"
-              value={formatIDRInput(values.office_money_balance)}
+              inputMode={
+                ["payment_contract", "attendance_minimum", "attendance_maximum", "start_date_contract"].includes(
+                  field.key,
+                )
+                  ? "numeric"
+                  : undefined
+              }
+              prefix={field.key === "payment_contract" ? "Rp." : undefined}
+              suffix={
+                ["attendance_minimum", "attendance_maximum"].includes(field.key)
+                  ? t("days/month")
+                  : field.key === "start_date_contract"
+                    ? t("day of month")
+                    : undefined
+              }
+              value={field.key === "payment_contract" ? formatIDRInput(values[field.key]) : values[field.key]}
+              placeholder={field.placeholder}
               onChange={(event) =>
                 setValues((current) =>
-                  current ? { ...current, office_money_balance: normalizeCurrencyInput(event.target.value) } : current,
+                  current
+                    ? {
+                        ...current,
+                        [field.key]:
+                          field.key === "payment_contract"
+                            ? normalizeCurrencyInput(event.target.value)
+                            : event.target.value,
+                      }
+                    : current,
                 )
               }
             />
-            <span className="text-xs text-[var(--color-foreground-muted)]">
+          </Field>
+        ))}
+      </FormSection>
+      <FormSection
+        title={<>{t("Money settings")}</>}
+        description={<>{t("Current office and dirty money balances.")}</>}
+        footer={
+          <>
+            <div aria-live="polite">
+              {moneyFeedback ? <Alert type={moneyFeedback.type} showIcon title={moneyFeedback.message} /> : null}
+            </div>
+            <Button
+              loading={saving}
+              disabled={saving || !values.is_admin}
+              onClick={() => save("money")}
+              className="h-11 px-6 font-extrabold uppercase"
+            >
+              {values.is_admin ? t("Save money") : t("Admin required")}
+            </Button>
+          </>
+        }
+      >
+        <Field
+          label={<>{t("Office money")}</>}
+          help={
+            <>
               {values.is_admin
                 ? t("Administrator may correct current office balance.")
                 : t("Read-only. Administrator role required to edit.")}
-            </span>
-          </label>
-          <label className="grid gap-2">
-            <span className="text-xs font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
-              {t("Dirty money")}
-            </span>
-            <Input
-              aria-label={t("Current dirty money balance")}
-              className="h-11 border-[var(--color-border)] bg-[rgba(7,6,5,.7)] px-3 text-base"
-              disabled={!values.is_admin}
-              inputMode="numeric"
-              prefix="$"
-              value={formatIDRInput(values.dirty_money_balance)}
-              onChange={(event) =>
-                setValues((current) =>
-                  current ? { ...current, dirty_money_balance: normalizeCurrencyInput(event.target.value) } : current,
-                )
-              }
-            />
-            <span className="text-xs text-[var(--color-foreground-muted)]">
+            </>
+          }
+        >
+          <Input
+            aria-label={t("Current office money balance")}
+            className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
+            disabled={!values.is_admin}
+            inputMode="numeric"
+            prefix="$"
+            value={formatIDRInput(values.office_money_balance)}
+            onChange={(event) =>
+              setValues((current) =>
+                current ? { ...current, office_money_balance: normalizeCurrencyInput(event.target.value) } : current,
+              )
+            }
+          />
+        </Field>
+        <Field
+          label={<>{t("Dirty money")}</>}
+          help={
+            <>
               {values.is_admin
                 ? t("Administrator may correct current dirty money balance.")
                 : t("Read-only. Administrator role required to edit.")}
-            </span>
-          </label>
-        </div>
-        <div className="flex flex-col gap-3 border-t border-[var(--color-border)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div aria-live="polite">
-            {moneyFeedback ? <Alert type={moneyFeedback.type} showIcon title={moneyFeedback.message} /> : null}
-          </div>
-          <Button
-            loading={saving}
-            disabled={saving || !values.is_admin}
-            onClick={() => save("money")}
-            className="h-11 px-6 font-extrabold uppercase"
-          >
-            {values.is_admin ? t("Save money") : t("Admin required")}
-          </Button>
-        </div>
-      </section>
+            </>
+          }
+        >
+          <Input
+            aria-label={t("Current dirty money balance")}
+            className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
+            disabled={!values.is_admin}
+            inputMode="numeric"
+            prefix="$"
+            value={formatIDRInput(values.dirty_money_balance)}
+            onChange={(event) =>
+              setValues((current) =>
+                current ? { ...current, dirty_money_balance: normalizeCurrencyInput(event.target.value) } : current,
+              )
+            }
+          />
+        </Field>
+      </FormSection>
     </div>
   );
 }

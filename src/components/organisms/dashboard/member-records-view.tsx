@@ -1,6 +1,5 @@
 "use client";
 
-import { Alert } from "antd";
 import { useState } from "react";
 
 import {
@@ -8,8 +7,9 @@ import {
   DataTableCell,
   dataTableRowClassName,
   paginateItems,
-  SectionHeader,
-  StatisticCard,
+  ResourceState,
+  StatisticsSection,
+  StatusIndicator,
   TablePagination,
 } from "@/components/atoms";
 import { useI18n } from "@/i18n";
@@ -19,7 +19,7 @@ export function MemberRecordsView({ data }: { data: MemberRecords | null }) {
   const [playerPage, setPlayerPage] = useState(1);
   const [attendancePage, setAttendancePage] = useState(1);
   const { locale, t, translate } = useI18n();
-  if (!data) return <Alert type="error" showIcon title={t("Personal records could not be loaded.")} />;
+  if (!data) return <ResourceState state="unavailable" message={t("Personal records could not be loaded.")} />;
   const attendanceRate = data.total_attendances ? Math.round((data.total_attended / data.total_attendances) * 100) : 0;
   const statistics = [
     { label: t("Total playtime"), value: formatDuration(data.total_playtime_seconds) },
@@ -29,14 +29,7 @@ export function MemberRecordsView({ data }: { data: MemberRecords | null }) {
 
   return (
     <>
-      <section className="mt-[30px]">
-        <SectionHeader index="01" eyebrow="Overview" title="My Statistics" />
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {statistics.map((item, index) => (
-            <StatisticCard index={index + 1} key={item.label} label={item.label} value={item.value} />
-          ))}
-        </div>
-      </section>
+      <StatisticsSection index="01" title="My Statistics" items={statistics} />
 
       <div className="mt-6">
         <DataTable
@@ -106,15 +99,9 @@ export function MemberRecordsView({ data }: { data: MemberRecords | null }) {
 function Status({ label, value }: { label: string; value: string }) {
   const positive = ["connected", "attended"].includes(value);
   const pending = value === "connecting";
-  return (
-    <span
-      className={`inline-flex items-center gap-2 text-xs font-black tracking-[.12em] uppercase ${positive ? "text-[#55dfbd]" : pending ? "text-[var(--color-primary-bright)]" : "text-[#ef7777]"}`}
-    >
-      <i className="h-1.5 w-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
-      {label}
-    </span>
-  );
+  return <StatusIndicator tone={positive ? "success" : pending ? "warning" : "danger"}>{label}</StatusIndicator>;
 }
+
 function formatDuration(seconds: number) {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);

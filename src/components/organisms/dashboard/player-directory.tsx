@@ -3,8 +3,7 @@
 import { Alert } from "antd";
 import { useState } from "react";
 
-import { DataTable, DataTableCell, dataTableRowClassName } from "@/components/atoms";
-import { DashboardPage } from "@/components/templates";
+import { DataTable, DataTableCell, dataTableRowClassName,SearchField, StatusIndicator } from "@/components/atoms";
 import { useI18n } from "@/i18n";
 
 export type CombinedPlayer = {
@@ -70,12 +69,10 @@ export function sortCombinedPlayers(players: CombinedPlayer[]) {
 export function PlayerDirectory({
   cfxAvailable = true,
   discordPresenceAvailable = true,
-  eyebrow,
   players,
 }: {
   cfxAvailable?: boolean;
   discordPresenceAvailable?: boolean;
-  eyebrow: string;
   players: CombinedPlayer[];
 }) {
   const [query, setQuery] = useState("");
@@ -97,11 +94,7 @@ export function PlayerDirectory({
   const cfxConnected = players.filter((player) => player.cfxStatus === "connected").length;
 
   return (
-    <DashboardPage
-      description={t("Players on the CR Roleplay server now, with their Discord and CFX status.")}
-      eyebrow={eyebrow}
-      title={t("Player Logs")}
-    >
+    <>
       {!cfxAvailable ? (
         <Alert
           className="mt-6"
@@ -118,7 +111,7 @@ export function PlayerDirectory({
           title={t("{source} player source is unavailable.", { source: "Discord" })}
         />
       ) : null}
-      <div className="mt-[30px]">
+      <div className="mt-[var(--space-section)]">
         <DataTable
           code="PL"
           columns={[
@@ -133,17 +126,15 @@ export function PlayerDirectory({
           title={t("Live player log")}
           toolbar={
             <div className="flex flex-wrap items-center gap-3">
-              <label className="sr-only" htmlFor="combined-player-search">
-                {t("Search members")}
-              </label>
               <span className="text-[var(--color-primary-muted)]" aria-hidden="true">
                 ⌕
               </span>
-              <input
-                className="h-9 min-w-[200px] flex-1 border border-[var(--color-border)] bg-[rgba(255,255,255,.015)] px-3 text-xs text-[var(--color-foreground)] outline-none placeholder:text-[var(--color-foreground-muted)] focus:border-[var(--color-primary-muted)]"
+              <SearchField
+                label={t("Search members")}
+                density="comfortable"
                 id="combined-player-search"
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search character, Discord, or CFX name"
+                placeholder={t("Search character, Discord, or CFX name")}
                 type="search"
                 value={query}
               />
@@ -190,7 +181,7 @@ export function PlayerDirectory({
           ))}
         </DataTable>
       </div>
-    </DashboardPage>
+    </>
   );
 }
 
@@ -212,21 +203,7 @@ function serverIdentity(player: CombinedPlayer) {
 
 function PlayerStatus({ status }: { status: PlayerPresenceStatus }) {
   const { translate } = useI18n();
-  const styles = {
-    connected: "text-[#78e99a] [&>i]:bg-[#57f287] [&>i]:shadow-[0_0_10px_rgba(87,242,135,.55)]",
-    visible: "text-[#78e99a] [&>i]:bg-[#57f287] [&>i]:shadow-[0_0_10px_rgba(87,242,135,.55)]",
-    connecting: "text-[var(--color-primary-bright)] [&>i]:bg-[var(--color-primary)]",
-    polling: "text-[var(--color-primary-bright)] [&>i]:bg-[var(--color-primary)]",
-    invisible: "text-[var(--color-foreground-muted)] [&>i]:bg-[#777067]",
-  }[status];
-  // Every state goes through the dictionary, which holds each one lowercase and
-  // lets the CSS uppercase it. Three of these were hardcoded English and only
-  // the two older ones were ever translated.
-  const label = translate(status);
-  return (
-    <span className={`flex shrink-0 items-center gap-[7px] text-xs font-black tracking-[.1em] uppercase ${styles}`}>
-      <i className="h-1.5 w-1.5 rounded-full" />
-      {label}
-    </span>
-  );
+  const tone =
+    status === "connected" || status === "visible" ? "success" : status === "invisible" ? "muted" : "warning";
+  return <StatusIndicator tone={tone}>{translate(status)}</StatusIndicator>;
 }

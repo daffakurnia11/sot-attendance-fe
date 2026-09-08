@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button, LanguageSwitcher } from "@/components/atoms";
 import { routes } from "@/config/routes";
@@ -44,6 +44,7 @@ const menuGroups = [
     items: [
       { href: routes.craftingCalculator, label: "Crafting Calculator", icon: "CC" },
       { href: routes.moneyTransactions.home, label: "Money Transactions", icon: "MT" },
+      { href: routes.safeboxStock, label: "Safebox Stock", icon: "SS", adminOnly: true },
     ],
   },
   {
@@ -56,13 +57,54 @@ export function DashboardShell({ children, displayName, isAdmin, username, logou
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const { t, translate } = useI18n();
+  const sidebarRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const menuButton = menuButtonRef.current;
+    document.body.style.overflow = "hidden";
+    const sidebar = sidebarRef.current;
+    const focusable = () => Array.from(sidebar?.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)") ?? []);
+    focusable()[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMenuOpen(false);
+        requestAnimationFrame(() => menuButton?.focus());
+      }
+      if (event.key !== "Tab") return;
+      const elements = focusable();
+      const first = elements[0];
+      const last = elements.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    const onResize = () => {
+      if (window.innerWidth >= 1024) setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [menuOpen]);
 
   return (
     <main className="min-h-dvh bg-[linear-gradient(90deg,rgba(255,255,255,.012)_1px,transparent_1px),linear-gradient(rgba(255,255,255,.01)_1px,transparent_1px),var(--color-background)] bg-[size:64px_64px]">
       <aside
+        ref={sidebarRef}
+        id="member-sidebar"
         className={cn(
-          "fixed inset-y-0 left-0 z-30 flex w-[270px] -translate-x-full flex-col border-r border-[var(--color-border)] bg-[rgba(13,10,6,.97)] px-[18px] py-6 transition-transform duration-200 lg:translate-x-0",
-          menuOpen && "translate-x-0",
+          "fixed inset-y-0 left-0 z-30 w-[270px] -translate-x-full flex-col border-r border-[var(--color-border)] bg-[rgba(13,10,6,.97)] px-[18px] py-6 transition-transform duration-200 lg:translate-x-0",
+          menuOpen ? "flex translate-x-0" : "hidden lg:flex",
         )}
       >
         <div className="flex items-center gap-3 px-2 pb-7">
@@ -75,7 +117,7 @@ export function DashboardShell({ children, displayName, isAdmin, username, logou
             priority
           />
           <div className="flex min-w-0 flex-col">
-            <strong className="font-[Impact] text-[19px] tracking-[.04em] uppercase">Shade of Triads</strong>
+            <strong className="font-display text-[19px] tracking-[.04em] uppercase">Shade of Triads</strong>
             <span className="text-xs tracking-[.12em] text-[var(--color-foreground-muted)]">{t("Member system")}</span>
           </div>
         </div>
@@ -132,7 +174,10 @@ export function DashboardShell({ children, displayName, isAdmin, username, logou
       {menuOpen ? (
         <button
           className="fixed inset-0 z-25 border-0 bg-black/70 lg:hidden"
-          onClick={() => setMenuOpen(false)}
+          onClick={() => {
+            setMenuOpen(false);
+            requestAnimationFrame(() => menuButtonRef.current?.focus());
+          }}
           aria-label={t("Close navigation")}
         />
       ) : null}
@@ -140,9 +185,12 @@ export function DashboardShell({ children, displayName, isAdmin, username, logou
       <div className="min-h-dvh lg:pl-[270px]">
         <header className="sticky top-0 z-20 flex min-h-[76px] items-center justify-end gap-[18px] border-b border-[var(--color-border)] bg-[rgba(7,6,5,.88)] px-4 py-2.5 backdrop-blur-2xl sm:px-6">
           <button
+            ref={menuButtonRef}
             className="mr-auto grid h-10 w-10 place-items-center rounded-md border border-[var(--color-border)] bg-transparent text-xl text-[var(--color-primary)] lg:hidden"
             onClick={() => setMenuOpen(true)}
             aria-label={t("Open navigation")}
+            aria-expanded={menuOpen}
+            aria-controls="member-sidebar"
           >
             ☰
           </button>

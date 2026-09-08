@@ -32,7 +32,7 @@ type Options<Data> = Readonly<{
 export function useLiveResource<Data>({ initialData, path, fetcher }: Options<Data>) {
   const [halted, setHalted] = useState(false);
 
-  const { data, error } = useSWR<Data>(path, fetcher, {
+  const { data, error, mutate, isLoading } = useSWR<Data>(path, fetcher, {
     fallbackData: initialData ?? undefined,
     refreshInterval: REFRESH_INTERVAL_MS,
     revalidateOnFocus: true,
@@ -44,6 +44,15 @@ export function useLiveResource<Data>({ initialData, path, fetcher }: Options<Da
   });
 
   return {
+    mutate,
+    isLoading,
+    retry: () => {
+      if (halted) {
+        window.location.reload();
+        return Promise.resolve();
+      }
+      return mutate().catch(() => undefined);
+    },
     data: data ?? initialData,
     /** True once refreshing has given up; the data on screen is frozen. */
     stale: halted,

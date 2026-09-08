@@ -5,6 +5,7 @@ import { ConfigProvider, theme } from "antd";
 import enUS from "antd/locale/en_US";
 import idID from "antd/locale/id_ID";
 
+import { designTokens } from "@/config/design-tokens";
 import { I18nProvider, useI18n } from "@/i18n";
 
 export function AppProvider({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -26,12 +27,13 @@ function LocalizedConfigProvider({ children }: Readonly<{ children: React.ReactN
       theme={{
         algorithm: theme.darkAlgorithm,
         token: {
-          colorPrimary: "#f2b63d",
-          colorInfo: "#f2b63d",
-          colorBgBase: "#090806",
-          colorTextBase: "#fff7db",
-          colorBorder: "#5f4722",
-          borderRadius: 8,
+          colorPrimary: designTokens.primary,
+          colorInfo: designTokens.primary,
+          colorBgBase: designTokens.background,
+          colorTextBase: designTokens.foreground,
+          colorBorder: designTokens.border,
+          borderRadius: designTokens.radius,
+          controlHeight: designTokens.controlHeight,
           fontFamily: "var(--font-sans)",
           fontSize: 16,
           fontSizeSM: 12,

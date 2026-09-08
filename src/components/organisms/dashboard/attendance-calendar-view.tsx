@@ -1,11 +1,12 @@
 "use client";
 
-import { Alert } from "antd";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
-import { DashboardPage } from "@/components/templates";
+import { MetricCard,Panel, PeriodNavigator, ResourceState } from "@/components/atoms";
+import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
 import type { AttendanceDayStatus, AttendanceReport } from "@/services/attendance";
+import { attendanceReportSchema } from "@/services/attendance";
 import { getAttendanceCalendar, getAttendanceCalendarSummary, groupAttendanceWeeks } from "@/services/attendance";
 
 import { AttendanceDayDetail } from "./attendance-day-detail";
@@ -28,15 +29,15 @@ const statusStyles: Record<AttendanceDayStatus, { card: string; dot: string; cou
   },
   safe: {
     card: "border-[rgba(85,223,189,.28)] bg-[rgba(42,211,169,.06)]",
-    dot: "bg-[#55dfbd]",
-    count: "text-[#55dfbd]",
-    label: "text-[#55dfbd]",
+    dot: "bg-[var(--color-success)]",
+    count: "text-[var(--color-success)]",
+    label: "text-[var(--color-success)]",
   },
   danger: {
     card: "border-[rgba(239,116,116,.3)] bg-[rgba(239,116,116,.06)]",
-    dot: "bg-[#ef7474]",
-    count: "text-[#ef7474]",
-    label: "text-[#ef7474]",
+    dot: "bg-[var(--color-danger-soft)]",
+    count: "text-[var(--color-danger-soft)]",
+    label: "text-[var(--color-danger-soft)]",
   },
   upcoming: {
     card: "border-[var(--color-border)] bg-[rgba(255,255,255,.012)]",
@@ -54,40 +55,21 @@ const statusLabels: Record<AttendanceDayStatus, string> = {
 };
 
 export function AttendanceCalendarView({ initialData, playerThreshold, today, combined = false }: Props) {
-  const [report, setReport] = useState(initialData);
+  const { report, loading, error, changeMonth, retry } = usePeriodReport({
+    initialData,
+    endpoint: "/api/attendance",
+    schema: attendanceReportSchema,
+  });
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(!initialData);
-  const requestController = useRef<AbortController | null>(null);
   const { locale, t, translate } = useI18n();
-
-  async function changeMonth(offset: number) {
-    if (!report) return;
-    const target = shiftMonth(report.month, offset);
-    requestController.current?.abort();
-    const controller = new AbortController();
-    requestController.current = controller;
-    setLoading(true);
-    setError(false);
-    try {
-      const response = await fetch(`/api/attendance?month=${encodeURIComponent(target)}`, {
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error("request failed");
-      setReport((await response.json()) as AttendanceReport);
-    } catch (requestError) {
-      if (!(requestError instanceof DOMException && requestError.name === "AbortError")) setError(true);
-    } finally {
-      if (requestController.current === controller) setLoading(false);
-    }
-  }
 
   if (!report)
     return (
-      <div className="w-full px-3.5 pt-6 sm:px-6 sm:pt-[30px]">
-        <Alert type="error" showIcon title={t("Attendance data could not be loaded.")} />
-      </div>
+      <ResourceState
+        state={loading ? "loading" : "unavailable"}
+        message={loading ? t("Loading data...") : t("Attendance data could not be loaded.")}
+        onRetry={() => void retry()}
+      />
     );
 
   const days = getAttendanceCalendar(report, playerThreshold, today);
@@ -95,17 +77,9 @@ export function AttendanceCalendarView({ initialData, playerThreshold, today, co
   const weeks = groupAttendanceWeeks(days);
 
   return (
-    <DashboardPage
-      description={
-        combined
-          ? "Monthly member totals and daily turnout across the contract period."
-          : "Daily turnout across the contract period, measured against the player threshold."
-      }
-      eyebrow="Member records"
-      title={combined ? "Attendance" : "Attendance Calendar"}
-    >
+    <>
       {combined ? <AttendanceModeTabs active="calendar" /> : null}
-      <section className="mt-[30px] grid gap-3 sm:grid-cols-3">
+      <section className="mt-[var(--space-section)] grid gap-3 sm:grid-cols-3">
         <LegendCard
           label={t("Safe")}
           note={t("Above {count} players", { count: playerThreshold })}
@@ -126,40 +100,22 @@ export function AttendanceCalendarView({ initialData, playerThreshold, today, co
         />
       </section>
 
-      <section className="mt-4 border border-[var(--color-border)] bg-[rgba(255,255,255,.012)]">
-        <div className="flex flex-col items-start gap-2 border-b border-[var(--color-border)] px-4 py-3 text-sm sm:flex-row sm:items-center sm:gap-3">
-          <span className="flex items-center gap-3">
-            <i className="h-2 w-2 shrink-0 rounded-full bg-[#55dfbd] shadow-[0_0_10px_rgba(85,223,189,.5)]" />
-            <strong className="whitespace-nowrap uppercase">{t("Attendance summary by date")}</strong>
-          </span>
-          <span className="whitespace-nowrap rounded-full bg-[rgba(255,255,255,.04)] px-2 py-1 text-xs text-[var(--color-foreground-muted)]">
-            {t("{count} attendance days", { count: report.attendance_days.length })}
-          </span>
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              aria-label={t("Previous month")}
-              className="grid h-9 w-9 place-items-center border border-[var(--color-border)] text-[var(--color-primary)] disabled:opacity-40"
-              disabled={loading}
-              onClick={() => void changeMonth(-1)}
-              type="button"
-            >
-              ‹
-            </button>
-            <strong className="min-w-[170px] text-center text-sm tracking-[.06em] uppercase">
-              {formatPeriod(report.period_start, report.period_end, locale)}
-            </strong>
-            <button
-              aria-label={t("Next month")}
-              className="grid h-9 w-9 place-items-center border border-[var(--color-border)] text-[var(--color-primary)] disabled:opacity-40"
-              disabled={loading}
-              onClick={() => void changeMonth(1)}
-              type="button"
-            >
-              ›
-            </button>
-          </div>
-        </div>
-        {error ? <Alert className="m-3" type="error" showIcon title={t("Could not load selected month.")} /> : null}
+      <Panel
+        className="mt-4"
+        title={t("Attendance summary by date")}
+        summary={t("{count} attendance days", { count: report.attendance_days.length })}
+        action={
+          <PeriodNavigator
+            start={report.period_start}
+            end={report.period_end}
+            loading={loading}
+            onChange={(offset) => void changeMonth(offset)}
+          />
+        }
+      >
+        {error ? (
+          <ResourceState state="stale" message={t("Could not load selected month.")} onRetry={() => void retry()} />
+        ) : null}
         <div
           className={`overflow-x-auto p-4 transition-opacity sm:p-5 ${loading ? "opacity-45" : "opacity-100"}`}
           aria-busy={loading}
@@ -193,7 +149,7 @@ export function AttendanceCalendarView({ initialData, playerThreshold, today, co
                       </span>
                       <i className={`mt-1 h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden="true" />
                     </div>
-                    <strong className="mt-1 block font-[Impact] text-3xl leading-none font-normal">
+                    <strong className="mt-1 block font-display text-3xl leading-none font-normal">
                       {Number(day.date.slice(-2))}
                     </strong>
                     <p className="mt-2.5 text-sm">
@@ -209,10 +165,10 @@ export function AttendanceCalendarView({ initialData, playerThreshold, today, co
             )}
           </div>
         </div>
-      </section>
+      </Panel>
 
       <AttendanceDayDetail date={selectedDate} onClose={() => setSelectedDate(null)} report={report} />
-    </DashboardPage>
+    </>
   );
 }
 
@@ -227,23 +183,15 @@ function LegendCard({
   status: AttendanceDayStatus;
   value: number;
 }) {
-  const style = statusStyles[status];
   return (
-    <article className={`border px-5 py-4 ${style.card}`}>
-      <p className="flex items-center gap-2.5 text-xs font-black tracking-[.18em] uppercase">
-        <i className={`h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden="true" />
-        <span className={style.label}>{label}</span>
-      </p>
-      <strong className={`mt-2 block font-[Impact] text-3xl font-normal ${style.count}`}>{value}</strong>
-      <p className="mt-1 text-xs text-[var(--color-foreground-muted)]">{note}</p>
-    </article>
+    <MetricCard
+      label={label}
+      value={value}
+      note={note}
+      dot
+      tone={status === "safe" ? "success" : status === "danger" ? "danger" : status === "good" ? "warning" : "muted"}
+    />
   );
-}
-
-function shiftMonth(month: string, offset: number) {
-  const date = new Date(`${month}-01T00:00:00Z`);
-  date.setUTCMonth(date.getUTCMonth() + offset);
-  return date.toISOString().slice(0, 7);
 }
 
 function formatMonth(date: string, locale: "en" | "id") {
@@ -257,14 +205,4 @@ function formatMonth(date: string, locale: "en" | "id") {
 function weekdayHeadings(locale: "en" | "id") {
   const formatter = new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", { weekday: "short", timeZone: "UTC" });
   return Array.from({ length: 7 }, (_unused, offset) => formatter.format(new Date(Date.UTC(2026, 7, 3 + offset))));
-}
-
-function formatPeriod(start: string, end: string, locale: "en" | "id") {
-  const formatter = new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  return `${formatter.format(new Date(`${start}T00:00:00Z`))} – ${formatter.format(new Date(`${end}T00:00:00Z`))}`;
 }

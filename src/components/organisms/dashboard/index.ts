@@ -10,4 +10,3 @@ export * from "./payslip-view";
 export * from "./player-directory";
 export * from "./player-directory-live";
 export * from "./player-search-view";
-export * from "./player-source-tabs";

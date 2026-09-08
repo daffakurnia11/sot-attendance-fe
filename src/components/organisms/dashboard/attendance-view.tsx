@@ -1,13 +1,21 @@
 "use client";
 
-import { Alert } from "antd";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
-import { OptionDropdown, ReportExportButton } from "@/components/atoms";
-import { DashboardPage } from "@/components/templates";
+import {
+  MetricCard,
+  OptionDropdown,
+  Panel,
+  PeriodNavigator,
+  ReportExportButton,
+  ResourceState,
+  SearchField,
+} from "@/components/atoms";
+import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
 import { buildAttendanceSheet } from "@/lib/report-export";
 import type { AttendanceReport, AttendanceSort } from "@/services/attendance";
+import { attendanceReportSchema } from "@/services/attendance";
 import {
   getAttendanceSummary,
   getLatestAttendanceSummary,
@@ -28,44 +36,24 @@ export function AttendanceView({
   personal?: boolean;
   combined?: boolean;
 }) {
-  const [report, setReport] = useState(initialData);
+  const { report, loading, error, changeMonth, retry } = usePeriodReport({
+    initialData,
+    endpoint: personal ? "/api/attendance/me" : "/api/attendance",
+    schema: attendanceReportSchema,
+  });
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<AttendanceSort>("default");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(!initialData);
-  const requestController = useRef<AbortController | null>(null);
-  const { locale, t } = useI18n();
-
-  async function changeMonth(offset: number) {
-    if (!report) return;
-    const target = shiftMonth(report.month, offset);
-    requestController.current?.abort();
-    const controller = new AbortController();
-    requestController.current = controller;
-    setLoading(true);
-    setError(false);
-    try {
-      const endpoint = personal ? "/api/attendance/me" : "/api/attendance";
-      const response = await fetch(`${endpoint}?month=${encodeURIComponent(target)}`, {
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error("request failed");
-      setReport((await response.json()) as AttendanceReport);
-    } catch (requestError) {
-      if (!(requestError instanceof DOMException && requestError.name === "AbortError")) setError(true);
-    } finally {
-      if (requestController.current === controller) setLoading(false);
-    }
-  }
+  const { t } = useI18n();
 
   if (!report)
     return (
-      <div className="w-full px-3.5 pt-6 sm:px-6 sm:pt-[30px]">
-        <Alert type="error" showIcon title={t("Attendance data could not be loaded.")} />
-      </div>
+      <ResourceState
+        state={loading ? "loading" : "unavailable"}
+        message={loading ? t("Loading data...") : t("Attendance data could not be loaded.")}
+        onRetry={() => void retry()}
+      />
     );
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -82,19 +70,9 @@ export function AttendanceView({
   const dates = report.period_dates;
 
   return (
-    <DashboardPage
-      description={
-        personal
-          ? "Your monthly attendance statistics from completed sessions."
-          : combined
-            ? "Monthly member totals and daily turnout across the contract period."
-            : "Monthly attendance records for all members."
-      }
-      eyebrow={personal ? "Personal records" : "Member records"}
-      title={personal ? "My Attendance" : combined ? "Attendance" : "Attendance Recap"}
-    >
+    <>
       {combined ? <AttendanceModeTabs active="recap" /> : null}
-      <section className={`mt-[30px] grid gap-3 sm:grid-cols-2 ${personal ? "" : "xl:grid-cols-4"}`}>
+      <section className={`mt-[var(--space-section)] grid gap-3 sm:grid-cols-2 ${personal ? "" : "xl:grid-cols-4"}`}>
         <AttendanceMetric label={t("Total attendance")} numerator={monthly.eligible} denominator={monthly.total} />
         <AttendanceMetric label={t("Attendance rate")} rate={monthly.rate} />
         {!personal ? (
@@ -107,31 +85,26 @@ export function AttendanceView({
         {!personal ? <AttendanceMetric label={t("Latest attendance rate")} rate={latest.rate} /> : null}
       </section>
 
-      <section className="mt-4 border border-[var(--color-border)] bg-[rgba(255,255,255,.012)]">
-        <div className="flex flex-col items-start gap-2 border-b border-[var(--color-border)] px-4 py-3 text-sm sm:flex-row sm:items-center sm:gap-3">
-          <span className="flex items-center gap-3">
-            <i className="h-2 w-2 shrink-0 rounded-full bg-[#55dfbd] shadow-[0_0_10px_rgba(85,223,189,.5)]" />
-            <strong className="whitespace-nowrap uppercase">{t("Attendance summary by date")}</strong>
-          </span>
-          <span className="whitespace-nowrap rounded-full bg-[rgba(255,255,255,.04)] px-2 py-1 text-xs text-[var(--color-foreground-muted)]">
-            {t("{count} attendance days", { count: report.attendance_days.length })}
-          </span>
-          <span className="ml-auto">
-            <ReportExportButton
-              filename={`attendance-${report.period_start}-${report.period_end}`}
-              sheets={[buildAttendanceSheet(report)]}
-            />
-          </span>
-        </div>
-        {error ? <Alert className="m-3" type="error" showIcon title={t("Could not load selected month.")} /> : null}
+      <Panel
+        className="mt-4"
+        title={t("Attendance summary by date")}
+        summary={t("{count} attendance days", { count: report.attendance_days.length })}
+        action={
+          <ReportExportButton
+            filename={`attendance-${report.period_start}-${report.period_end}`}
+            sheets={[buildAttendanceSheet(report)]}
+          />
+        }
+      >
+        {error ? (
+          <ResourceState state="stale" message={t("Could not load selected month.")} onRetry={() => void retry()} />
+        ) : null}
         <div className="flex flex-wrap items-center gap-3 border-b border-[var(--color-border)] px-4 py-3">
           {!personal ? (
             <>
-              <label className="sr-only" htmlFor="attendance-search">
-                {t("Search members")}
-              </label>
-              <input
-                className="h-10 min-w-[220px] flex-1 border border-[var(--color-border)] bg-[rgba(255,255,255,.015)] px-3 text-base text-[var(--color-foreground)] outline-none placeholder:text-[var(--color-foreground-muted)] focus:border-[var(--color-primary-muted)]"
+              <SearchField
+                label={t("Search members")}
+                density="comfortable"
                 id="attendance-search"
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={t("Search members...")}
@@ -155,29 +128,12 @@ export function AttendanceView({
               />
             </>
           ) : null}
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              className="grid h-9 w-9 place-items-center border border-[var(--color-border)] text-[var(--color-primary)] disabled:opacity-40"
-              disabled={loading}
-              onClick={() => void changeMonth(-1)}
-              type="button"
-              aria-label={t("Previous month")}
-            >
-              ‹
-            </button>
-            <strong className="min-w-[170px] text-center text-sm tracking-[.06em] uppercase">
-              {formatPeriod(report.period_start, report.period_end, locale)}
-            </strong>
-            <button
-              className="grid h-9 w-9 place-items-center border border-[var(--color-border)] text-[var(--color-primary)] disabled:opacity-40"
-              disabled={loading}
-              onClick={() => void changeMonth(1)}
-              type="button"
-              aria-label={t("Next month")}
-            >
-              ›
-            </button>
-          </div>
+          <PeriodNavigator
+            start={report.period_start}
+            end={report.period_end}
+            loading={loading}
+            onChange={(offset) => void changeMonth(offset)}
+          />
         </div>
 
         <div
@@ -258,14 +214,14 @@ export function AttendanceView({
                         {record ? (
                           record.is_attended ? (
                             <i
-                              className="grid h-6 w-6 place-items-center rounded-md bg-[rgba(42,211,169,.16)] not-italic text-[#55dfbd]"
+                              className="grid h-6 w-6 place-items-center rounded-md bg-[rgba(42,211,169,.16)] not-italic text-[var(--color-success)]"
                               aria-label={t("Attended")}
                             >
                               ✓
                             </i>
                           ) : (
                             <i
-                              className="grid h-6 w-6 place-items-center rounded-md bg-[rgba(239,116,116,.16)] not-italic text-[#ef7474]"
+                              className="grid h-6 w-6 place-items-center rounded-md bg-[rgba(239,116,116,.16)] not-italic text-[var(--color-danger-soft)]"
                               aria-label={t("Not attended")}
                             >
                               ✗
@@ -298,11 +254,11 @@ export function AttendanceView({
             ) : null}
           </div>
         </div>
-      </section>
+      </Panel>
 
       <AttendanceDayDetail date={selectedDate} onClose={() => setSelectedDate(null)} report={report} />
       <AttendanceMemberDetail memberID={selectedMember} onClose={() => setSelectedMember(null)} report={report} />
-    </DashboardPage>
+    </>
   );
 }
 
@@ -318,37 +274,20 @@ function AttendanceMetric({
   rate?: number;
 }) {
   return (
-    <article className="border border-[var(--color-border)] bg-[rgba(242,182,61,.04)] px-5 py-4">
-      <p className="text-xs font-black tracking-[.18em] text-[var(--color-primary-muted)] uppercase">{label}</p>
-      <strong
-        className={`mt-2 block font-[Impact] text-3xl font-normal ${rate === undefined ? "text-[var(--color-foreground)]" : "text-[#55dfbd]"}`}
-      >
-        {rate === undefined ? (
+    <MetricCard
+      label={label}
+      tone={rate === undefined ? "neutral" : "success"}
+      value={
+        rate === undefined ? (
           <>
             {numerator} <span className="text-lg text-[var(--color-foreground-muted)]">/ {denominator}</span>
           </>
         ) : (
           `${rate.toFixed(1)}%`
-        )}
-      </strong>
-    </article>
+        )
+      }
+    />
   );
-}
-
-function shiftMonth(month: string, offset: number) {
-  const date = new Date(`${month}-01T00:00:00Z`);
-  date.setUTCMonth(date.getUTCMonth() + offset);
-  return date.toISOString().slice(0, 7);
-}
-
-function formatPeriod(start: string, end: string, locale: "en" | "id") {
-  const formatter = new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  return `${formatter.format(new Date(`${start}T00:00:00Z`))} – ${formatter.format(new Date(`${end}T00:00:00Z`))}`;
 }
 
 function initials(name: string) {

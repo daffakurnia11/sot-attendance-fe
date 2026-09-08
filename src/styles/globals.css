@@ -1,15 +1,61 @@
 @import "tailwindcss";
 
-@theme {
-  --color-background: #070605;
-  --color-background-soft: #100d09;
-  --color-surface: #151008;
-  --color-primary: #f2b63d;
-  --color-primary-bright: #ffd966;
-  --color-primary-muted: #a98245;
-  --color-danger: #d83a2f;
-  --color-foreground: #fff6d6;
-  --color-foreground-muted: #b9ac91;
-  --color-border: rgba(217, 169, 80, 0.24);
+@theme inline {
+  --color-background: var(--sot-background);
+  --color-background-soft: var(--sot-background-soft);
+  --color-surface: var(--sot-surface);
+  --color-primary: var(--sot-primary);
+  --color-primary-bright: var(--sot-primary-bright);
+  --color-primary-muted: var(--sot-primary-muted);
+  --color-danger: var(--sot-danger);
+  --color-foreground: var(--sot-foreground);
+  --color-foreground-muted: var(--sot-foreground-muted);
+  --color-border: var(--sot-border);
+  --color-danger-soft: var(--sot-danger-soft);
+  --color-success: var(--sot-success);
+  --color-border-subtle: var(--sot-border-subtle);
+  --color-panel-soft: var(--sot-panel-soft);
+  --color-panel-accent: var(--sot-panel-accent);
+  --color-control-background: var(--sot-control-background);
+  --font-display: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   --font-sans: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+}
+
+:root {
+  --space-section: 30px;
+  --panel-background: linear-gradient(145deg, var(--sot-panel-soft), rgba(255, 255, 255, 0.01));
+  --panel-active-background: linear-gradient(90deg, rgba(242, 182, 61, 0.14), transparent);
+}
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--sot-primary-bright);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+:root {
+  --color-background: var(--sot-background);
+  --color-background-soft: var(--sot-background-soft);
+  --color-surface: var(--sot-surface);
+  --color-primary: var(--sot-primary);
+  --color-primary-bright: var(--sot-primary-bright);
+  --color-primary-muted: var(--sot-primary-muted);
+  --color-danger: var(--sot-danger);
+  --color-foreground: var(--sot-foreground);
+  --color-foreground-muted: var(--sot-foreground-muted);
+  --color-border: var(--sot-border);
+  --color-danger-soft: var(--sot-danger-soft);
+  --color-success: var(--sot-success);
+  --color-border-subtle: var(--sot-border-subtle);
+  --color-panel-soft: var(--sot-panel-soft);
+  --color-panel-accent: var(--sot-panel-accent);
+  --color-control-background: var(--sot-control-background);
 }

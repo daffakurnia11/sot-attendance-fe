@@ -19,7 +19,7 @@ export function SectionHeader({ eyebrow, index, title }: SectionHeaderProps) {
         <p className="text-xs font-black tracking-[.25em] text-[var(--color-primary)] uppercase">
           {translate(eyebrow)}
         </p>
-        <h2 className="font-[Impact] text-[27px] font-normal tracking-[.03em] uppercase">{translate(title)}</h2>
+        <h2 className="font-display text-[27px] font-normal tracking-[.03em] uppercase">{translate(title)}</h2>
       </div>
       <i
         className="hidden h-px bg-[linear-gradient(90deg,var(--color-border),transparent)] sm:block"

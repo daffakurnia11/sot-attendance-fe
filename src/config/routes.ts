@@ -18,6 +18,7 @@ export const routes = {
       dirty: "/money-transactions?account=dirty",
     },
   },
+  safeboxStock: "/safebox-stock",
   craftingCalculator: "/crafting-calculator",
   players: {
     home: "/players",

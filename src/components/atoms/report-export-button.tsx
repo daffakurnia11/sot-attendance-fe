@@ -36,7 +36,7 @@ export function ReportExportButton({ filename, sheets }: Props) {
       aria-label={label}
       className={`grid h-8 w-8 shrink-0 place-items-center border transition-colors disabled:opacity-45 ${
         failed
-          ? "border-[#ef7474] text-[#ef7474]"
+          ? "border-[var(--color-danger-soft)] text-[var(--color-danger-soft)]"
           : "border-[var(--color-border)] text-[var(--color-primary-bright)] hover:bg-[rgba(242,182,61,.1)]"
       }`}
       disabled={busy}
