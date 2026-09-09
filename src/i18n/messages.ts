@@ -95,6 +95,8 @@ export const en = {
   "Crafting Calculator": "Crafting Calculator",
   "Business operations": "Business operations",
   "Safebox Stock": "Safebox Stock",
+  "Safebox Transaction Log": "Safebox Transaction Log",
+  "Review every stock deposit and withdrawal.": "Review every stock deposit and withdrawal.",
   "Track and adjust weapon stock across shared safeboxes.": "Track and adjust weapon stock across shared safeboxes.",
   "Track and adjust stock across shared safeboxes.": "Track and adjust stock across shared safeboxes.",
   "Office Money Transaction": "Office Money Transaction",
@@ -493,6 +495,8 @@ export const id: Record<MessageKey, string> = {
   "Crafting Calculator": "Kalkulator Crafting",
   "Business operations": "Operasional bisnis",
   "Safebox Stock": "Stok Safebox",
+  "Safebox Transaction Log": "Log Transaksi Safebox",
+  "Review every stock deposit and withdrawal.": "Tinjau setiap penyetoran dan penarikan stok.",
   "Track and adjust weapon stock across shared safeboxes.":
     "Pantau dan sesuaikan stok senjata di seluruh safebox bersama.",
   "Track and adjust stock across shared safeboxes.": "Pantau dan sesuaikan stok di seluruh safebox bersama.",

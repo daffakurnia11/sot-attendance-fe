@@ -19,6 +19,7 @@ export const routes = {
     },
   },
   safeboxStock: "/safebox-stock",
+  safeboxTransactions: "/safebox-stock/transactions",
   craftingCalculator: "/crafting-calculator",
   players: {
     home: "/players",
