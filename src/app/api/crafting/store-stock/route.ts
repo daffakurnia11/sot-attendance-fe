@@ -2,16 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { goAPIURL } from "@/lib/env.server";
-import { getAppAccessToken, isAdminSession } from "@/lib/session.server";
+import { memberRoute } from "@/lib/session.server";
 import { craftingStoreStockRequestSchema } from "@/services/crafting";
 
-export async function POST(request: Request) {
-  const accessToken = await getAppAccessToken(request);
-  if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!(await isAdminSession())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const parsed = craftingStoreStockRequestSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid crafting stock request" }, { status: 422 });
-  try {
+export const POST = memberRoute(
+  "Crafting stock unavailable",
+  async (accessToken, request) => {
+    const parsed = craftingStoreStockRequestSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) return Response.json({ error: "Invalid crafting stock request" }, { status: 422 });
     const response = await fetch(new URL("/api/v1/crafting/store-stock", goAPIURL), {
       method: "POST",
       headers: {
@@ -32,7 +30,6 @@ export async function POST(request: Request) {
       );
     }
     return new NextResponse(null, { status: 204 });
-  } catch {
-    return NextResponse.json({ error: "Crafting stock unavailable" }, { status: 502 });
-  }
-}
+  },
+  { admin: true },
+);
