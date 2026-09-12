@@ -30,26 +30,51 @@ export const safeboxTransactionsSchema = z.object({
     }),
   ),
 });
+/** Ceiling on a balance an adjustment may set. Mirrors MaxItemQuantity in internal/stock. */
+export const maxItemQuantity = 1_000_000;
+/** Ceiling on a single deposit or withdraw. Mirrors MaxLineQuantity in internal/stock. */
+export const maxLineQuantity = 10_000;
+
+// A deposit or withdraw moves stock, so its quantity is a delta: positive, and
+// capped per movement. An adjustment sets the balance outright, so its quantity
+// is the target: zero is legitimate and the ceiling is what a balance may hold.
 export const safeboxTransactionSchema = z
   .object({
     safebox: z.enum(["public", "boss"]),
-    action: z.enum(["deposit", "withdraw"]),
+    action: z.enum(["deposit", "withdraw", "adjustment"]),
     idempotency_key: z.string().uuid(),
     reason: z.string().trim().min(1).max(500),
     items: z
-      .array(z.object({ item_key: z.string().trim().min(1), quantity: z.number().int().positive().max(10_000) }))
+      .array(z.object({ item_key: z.string().trim().min(1), quantity: z.number().int() }))
       .min(1)
       .max(100),
   })
   .superRefine((value, context) => {
+    const [minimum, maximum] = value.action === "adjustment" ? [0, maxItemQuantity] : [1, maxLineQuantity];
     const keys = new Set<string>();
     value.items.forEach((item, index) => {
+      if (item.quantity < minimum || item.quantity > maximum)
+        context.addIssue({ code: "custom", message: "Quantity is out of range", path: ["items", index, "quantity"] });
       if (keys.has(item.item_key))
         context.addIssue({ code: "custom", message: "Item must be unique", path: ["items", index, "item_key"] });
       keys.add(item.item_key);
     });
   });
 export type SafeboxStockItem = z.infer<typeof stockItemSchema>;
+
+/**
+ * Display order and headings for the stock groups, keyed by the value the Go
+ * API sends. Shared so the read-only board and the settings editor group and
+ * name items identically.
+ */
+export const stockGroups = [
+  { key: "crafting", label: "Crafting Stock" },
+  { key: "ammo", label: "Ammo Stock" },
+  { key: "body_drugs", label: "Body & Drugs Stock" },
+  { key: "weapon", label: "Weapon Stock" },
+  { key: "blueprint", label: "Blueprint Stock" },
+] as const satisfies readonly { key: z.infer<typeof stockGroupSchema>; label: string }[];
+
 export type SafeboxStock = z.infer<typeof safeboxStockSchema>;
 export type SafeboxTransaction = z.infer<typeof safeboxTransactionSchema>;
 export type SafeboxTransactions = z.infer<typeof safeboxTransactionsSchema>;

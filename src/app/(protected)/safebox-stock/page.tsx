@@ -15,7 +15,7 @@ export default async function SafeboxStockPage() {
     <DashboardPage
       title="Safebox Stock"
       eyebrow="Business operations"
-      description="Track and adjust stock across shared safeboxes."
+      description="Current stock across shared safeboxes."
     >
       <SafeboxStockView initialData={await loadSafeboxStock("/safebox-stock")} />
     </DashboardPage>
