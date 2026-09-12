@@ -22,7 +22,7 @@ export function SafeboxToggle({
         <button
           aria-pressed={value === box}
           className={cn(
-            "flex-1 px-4 py-2 text-xs font-extrabold tracking-[.12em] text-[var(--color-foreground-muted)] uppercase",
+            "flex-1 px-4 py-2 text-xs font-extrabold tracking-[.12em] whitespace-nowrap text-[var(--color-foreground-muted)] uppercase",
             value === box && "bg-[var(--color-primary)] text-[#160f05]",
           )}
           disabled={disabled}
