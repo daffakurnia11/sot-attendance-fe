@@ -2,7 +2,15 @@ import { z } from "zod";
 
 import { createRouteFetcher } from "@/lib/route-fetcher";
 
-const stockGroupSchema = z.enum(["crafting", "ammo", "body_drugs", "weapon", "blueprint"]);
+const stockGroupSchema = z.enum([
+  "crafting",
+  "ammo",
+  "body_drugs",
+  "weapon",
+  "blueprint",
+  "thief_tools",
+  "weapon_accessories",
+]);
 const stockItemSchema = z.object({
   safebox: z.enum(["public", "boss"]),
   item_key: z.string().min(1),
@@ -73,6 +81,8 @@ export const stockGroups = [
   { key: "body_drugs", label: "Body & Drugs Stock" },
   { key: "weapon", label: "Weapon Stock" },
   { key: "blueprint", label: "Blueprint Stock" },
+  { key: "thief_tools", label: "Thief Tools Stock" },
+  { key: "weapon_accessories", label: "Weapon Accessories Stock" },
 ] as const satisfies readonly { key: z.infer<typeof stockGroupSchema>; label: string }[];
 
 export type SafeboxStock = z.infer<typeof safeboxStockSchema>;
