@@ -71,7 +71,7 @@ export function combinePlayerLogs(data: DashboardData | null): CombinedPlayer[] 
         characterName: player.character_name || "-",
         discordName: player.display_name,
         discordUsername: player.username,
-        discordStatus: discordPresence(player.discord_status),
+        discordStatus: discordPresence(player),
         serverUsername: player.cfx_name,
         serverCID: player.cid,
         serverID: player.server_id ?? undefined,
@@ -86,20 +86,73 @@ export function combinePlayerLogs(data: DashboardData | null): CombinedPlayer[] 
       };
     });
 
-  return onServer;
+  // Whoever the roster lists that no open visit accounts for.
+  //
+  // Keyed off the visits that are open right now, not off every player the
+  // webhook has ever reported: discord_players carries a row per server_members
+  // character for all time, so keying off it suppressed anyone who had played
+  // before, which is nearly everyone. CFX is the live roster, so a name on it
+  // with no open visit is a player on the server whose connect event was
+  // dropped - the case this exists for.
+  //
+  // The cost is that CFX lags an exit by up to a poll interval, so a player who
+  // just left can appear here briefly. They are marked unreported and carry no
+  // visit of their own - no slot, no playtime - and the next roster read drops
+  // them.
+  //
+  // Their identity is still known: CFX reports only a name, but that name is
+  // the same server_members.username the webhook stores, so the character and
+  // the Discord account behind it come from the record of every character the
+  // server has ever reported. Only the visit is missing, not the person.
+  const knownByCFXName = new Map(
+    data.discord_players
+      .filter((player) => player.cfx_name)
+      .map((player) => [normalizeCFXName(player.cfx_name), player]),
+  );
+  const accountedFor = new Set(onServer.map((player) => normalizeCFXName(player.serverUsername)).filter(Boolean));
+  const cfxOnly: CombinedPlayer[] = data.cfx_players
+    .filter((player) => !accountedFor.has(normalizeCFXName(player.name)))
+    .map((player) => {
+      const known = knownByCFXName.get(normalizeCFXName(player.name));
+      return {
+        id: `cfx-${player.id}`,
+        characterName: known?.character_name || "-",
+        discordName: known?.display_name || "-",
+        discordUsername: known?.username ?? "",
+        discordStatus: known ? discordPresence(known) : ("invisible" as const),
+        // The stored spelling where there is one: CFX reports whatever the
+        // player set, and server_members holds what the game server sent.
+        serverUsername: known?.cfx_name || player.name,
+        serverCID: known?.cid ?? "",
+        // Deliberately no server_id: the slot belongs to a visit, and the
+        // webhook never opened one for this player.
+        serverID: undefined,
+        serverStatus: "unreported" as const,
+        cfxServerID: player.id,
+        cfxPing: player.ping,
+        cfxStatus: "connected" as const,
+      };
+    });
+
+  return [...onServer, ...cfxOnly];
 }
 
 /**
- * Discord reports five states and cannot tell offline from invisible, so a
- * member is either visible to the bot or not.
+ * What Discord can see of this member on the server.
  *
- * Presence the bot could not reach at all reads invisible too: to a reader the
- * fact is the same, that this member cannot be seen. Whether the source itself
- * answered is reported once, by the banner above the table, rather than
- * repeated on every row.
+ * The activity is the answer, not the presence status: a member shown online
+ * but playing something else is not on this server, and one shown dnd while the
+ * activity names the server is. The activity also says which phase they are in,
+ * so the column separates joining from arrived the way the server column does.
+ *
+ * Everything else reads invisible, including presence the bot could not reach:
+ * to the reader all of it is the one fact, that Discord is not showing this
+ * person on the server. The banner above the table is what says whether the
+ * source answered at all.
  */
-function discordPresence(status: DashboardData["discord_players"][number]["discord_status"]) {
-  return status === "online" || status === "idle" || status === "dnd" ? ("visible" as const) : ("invisible" as const);
+function discordPresence(player: DashboardData["discord_players"][number]) {
+  if (!player.discord_playing) return "invisible" as const;
+  return player.discord_connecting ? ("connecting" as const) : ("connected" as const);
 }
 
 function normalizeCFXName(value: string) {

@@ -20,6 +20,7 @@ const playerSchema = z.object({
   /** Live Discord presence, pulled from the bot and stored nowhere. */
   discord_status: z.enum(["online", "idle", "dnd", "offline", "invisible", "unknown"]),
   discord_playing: z.boolean(),
+  discord_connecting: z.boolean(),
   current_playtime_seconds: z.number().int().nonnegative(),
   total_playtime_seconds: z.number().int().nonnegative(),
 });

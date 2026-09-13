@@ -17,6 +17,7 @@ const valid = {
       status: "offline",
       discord_status: "offline",
       discord_playing: false,
+      discord_connecting: false,
       current_playtime_seconds: 0,
       total_playtime_seconds: 5400,
     },

@@ -3,7 +3,7 @@
 import { Alert } from "antd";
 import { useState } from "react";
 
-import { DataTable, DataTableCell, dataTableRowClassName,SearchField, StatusIndicator } from "@/components/atoms";
+import { DataTable, DataTableCell, dataTableRowClassName, SearchField, StatusIndicator } from "@/components/atoms";
 import { useI18n } from "@/i18n";
 
 export type CombinedPlayer = {
@@ -25,27 +25,30 @@ export type CombinedPlayer = {
 };
 
 /**
- * Discord cannot distinguish offline from invisible, so a present member reads
- * connected and an absent one invisible. "unknown" is a third thing: live
- * presence never arrived, so the column has nothing of its own to report.
+ * What Discord can see of the member, in the same vocabulary the other two
+ * columns use.
  *
- * It keeps its own state (and its own hollow dot) rather than collapsing into
- * invisible, because the two arrive by different paths and only one of them is
- * an actual answer from Discord. Both READ as "Invisible" to the member: from
- * the reader's side "Discord is not showing this person" is the same fact
- * either way, and a bare "Unknown" told them nothing they could act on.
+ * The activity names the server while a member is joining it and again once
+ * they are in, so Discord distinguishes connecting from connected exactly as
+ * the game server does, and the column now says which.
+ *
+ * Everything else is invisible. Discord cannot tell offline from invisible, a
+ * member who is online but playing something else is not on this server, and
+ * presence the bot could not reach at all reads the same way: from a reader's
+ * side all three are the one fact, that Discord is not showing this person on
+ * the server. Whether the source itself answered is reported once, by the
+ * banner above the table, rather than repeated on every row.
  */
-// Discord presence is about being seen, not about being attached to anything,
-// so the states are visible and invisible: "connected" belonged to the server
-// and CFX columns and read as a third kind of connection here.
-//
-// Discord cannot tell offline from invisible, and presence the bot could not
-// reach is invisible too - from a reader's side all three are the same fact,
-// that this member cannot be seen. The banner above the table is what says
-// whether the source itself was reachable.
-type DiscordStatus = "visible" | "invisible";
-/** A visit is connecting or connected; once it ends the row leaves the table. */
-type ServerStatus = "connecting" | "connected";
+type DiscordStatus = "connecting" | "connected" | "invisible";
+/**
+ * A visit is connecting or connected; once it ends the row leaves the table.
+ *
+ * "unreported" is the player the CFX roster lists but the webhook never opened
+ * a visit for. The game server is on the server; its connect event is what went
+ * missing. The row is shown so the table matches the roster, and marked so it
+ * is never mistaken for a visit that is earning attendance.
+ */
+type ServerStatus = "connecting" | "connected" | "unreported";
 /** Polling means on the server but not yet in the polled CFX directory. */
 type CFXStatus = "connected" | "polling";
 
@@ -54,6 +57,7 @@ type PlayerPresenceStatus = DiscordStatus | ServerStatus | CFXStatus;
 const statusPriority: Record<ServerStatus, number> = {
   connected: 0,
   connecting: 1,
+  unreported: 2,
 };
 
 export function sortCombinedPlayers(players: CombinedPlayer[]) {
@@ -90,7 +94,7 @@ export function PlayerDirectory({
       )
     : players;
   filteredPlayers = sortCombinedPlayers(filteredPlayers);
-  const discordConnected = players.filter((player) => player.discordStatus === "visible").length;
+  const discordConnected = players.filter((player) => player.discordStatus === "connected").length;
   const cfxConnected = players.filter((player) => player.cfxStatus === "connected").length;
 
   return (
@@ -203,7 +207,6 @@ function serverIdentity(player: CombinedPlayer) {
 
 function PlayerStatus({ status }: { status: PlayerPresenceStatus }) {
   const { translate } = useI18n();
-  const tone =
-    status === "connected" || status === "visible" ? "success" : status === "invisible" ? "muted" : "warning";
+  const tone = status === "connected" ? "success" : status === "invisible" ? "muted" : "warning";
   return <StatusIndicator tone={tone}>{translate(status)}</StatusIndicator>;
 }
