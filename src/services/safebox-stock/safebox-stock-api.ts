@@ -11,6 +11,7 @@ const stockGroupSchema = z.enum([
   "thief_tools",
   "weapon_accessories",
   "electronic_tools",
+  "robbery_item",
 ]);
 const stockItemSchema = z.object({
   safebox: z.enum(["public", "boss"]),
@@ -85,6 +86,7 @@ export const stockGroups = [
   { key: "thief_tools", label: "Thief Tools Stock" },
   { key: "weapon_accessories", label: "Weapon Accessories Stock" },
   { key: "electronic_tools", label: "Electronic Tools Stock" },
+  { key: "robbery_item", label: "Robbery Item Stock" },
 ] as const satisfies readonly { key: z.infer<typeof stockGroupSchema>; label: string }[];
 
 export type SafeboxStock = z.infer<typeof safeboxStockSchema>;
