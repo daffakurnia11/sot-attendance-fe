@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { MetricCard,Panel, PeriodNavigator, ResourceState } from "@/components/atoms";
+import { MetricCard, Panel, PeriodNavigator, ResourceState } from "@/components/atoms";
 import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
 import type { AttendanceDayStatus, AttendanceReport } from "@/services/attendance";

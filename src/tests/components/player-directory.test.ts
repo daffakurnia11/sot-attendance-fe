@@ -81,7 +81,13 @@ describe("combined player logs", () => {
         discord_players: [
           // Busy, but the activity names the server: they are on it.
           apiPlayer({ member_id: 1, discord_status: "dnd", discord_playing: true, cfx_name: "" }),
-          apiPlayer({ member_id: 2, discord_status: "online", discord_playing: true, discord_connecting: true, cfx_name: "" }),
+          apiPlayer({
+            member_id: 2,
+            discord_status: "online",
+            discord_playing: true,
+            discord_connecting: true,
+            cfx_name: "",
+          }),
           // Online, but playing something else.
           apiPlayer({ member_id: 3, discord_status: "online", discord_playing: false, cfx_name: "" }),
           apiPlayer({ member_id: 4, discord_status: "unknown", discord_playing: false, cfx_name: "" }),
@@ -166,7 +172,9 @@ describe("combined player logs", () => {
   it("lists a returning player the webhook has not reported this visit", () => {
     const rows = combinePlayerLogs(
       dashboard({
-        discord_players: [apiPlayer({ member_id: 2, character_name: "Back", cfx_name: "SOT - Ken", status: "offline" })],
+        discord_players: [
+          apiPlayer({ member_id: 2, character_name: "Back", cfx_name: "SOT - Ken", status: "offline" }),
+        ],
         cfx_players: [{ id: 8, name: "sot - ken", ping: 44 }],
       }),
     );
@@ -202,7 +210,9 @@ describe("combined player logs", () => {
   it("does not list a player twice when the webhook already has their visit", () => {
     const rows = combinePlayerLogs(
       dashboard({
-        discord_players: [apiPlayer({ member_id: 1, character_name: "Playing", cfx_name: "SOT - Kenji", status: "connected" })],
+        discord_players: [
+          apiPlayer({ member_id: 1, character_name: "Playing", cfx_name: "SOT - Kenji", status: "connected" }),
+        ],
         cfx_players: [{ id: 7, name: "sot - kenji", ping: 20 }],
       }),
     );

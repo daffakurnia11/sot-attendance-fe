@@ -50,7 +50,6 @@ describe("settings view", () => {
     expect(html.match(/<(?:button|input)(?![^>]*\bdisabled\b)[^>]*>/g)).toBeNull();
   });
 
-
   it("prefills each item of the selected safebox with its current balance", () => {
     const html = render(createElement(SafeboxStockSettings, { initialData: stock, isAdmin: true }));
     expect(html).toContain("Iron");
