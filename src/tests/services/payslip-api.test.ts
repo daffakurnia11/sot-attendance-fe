@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fetchPayslips, sortPayslipPlayers } from "@/services/payslip";
+import { fetchPayslips, matchesPayslipEligibility, sortPayslipPlayers } from "@/services/payslip";
 
 const valid = {
   month: "2026-08",
@@ -95,4 +95,18 @@ it("preserves guild roles and excluded eligibility", async () => {
   };
   const fetcher = async () => new Response(JSON.stringify(payload));
   expect(await fetchPayslips("http://api.test", "token", undefined, fetcher as typeof fetch)).toEqual(payload);
+});
+
+it("separates eligible, below-minimum contract members, and excluded players", () => {
+  const eligible = valid.players[0];
+  const belowMinimum = { ...eligible, eligible: false, excluded: false };
+  const excluded = { ...eligible, eligible: false, excluded: true };
+  expect(matchesPayslipEligibility(eligible, "eligible")).toBe(true);
+  expect(matchesPayslipEligibility(belowMinimum, "ineligible")).toBe(true);
+  expect(matchesPayslipEligibility(excluded, "ineligible")).toBe(false);
+  expect(matchesPayslipEligibility(eligible, "contract")).toBe(true);
+  expect(matchesPayslipEligibility(belowMinimum, "contract")).toBe(true);
+  expect(matchesPayslipEligibility(excluded, "contract")).toBe(false);
+  expect(matchesPayslipEligibility(excluded, "excluded")).toBe(true);
+  expect(matchesPayslipEligibility(eligible, "excluded")).toBe(false);
 });

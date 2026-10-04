@@ -1,4 +1,6 @@
 export const en = {
+  Contract: "Contract",
+  Excluded: "Excluded",
   EXCLUDED: "EXCLUDED",
   "No CR role": "No CR role",
   "Current contract period": "Current contract period",
@@ -413,6 +415,8 @@ export type MessageKey = keyof typeof en;
 
 export const id: Record<MessageKey, string> = {
   ...en,
+  Contract: "Kontrak",
+  Excluded: "Dikecualikan",
   EXCLUDED: "DIKECUALIKAN",
   "No CR role": "Tidak ada role CR",
   "Current contract period": "Periode kontrak saat ini",

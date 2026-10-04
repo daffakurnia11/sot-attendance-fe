@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   DataTable,
@@ -16,9 +16,9 @@ import {
 import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
 import { buildPayslipSheets } from "@/lib/report-export";
-import type { PayslipReport, PayslipSort } from "@/services/payslip";
+import type { PayslipEligibility, PayslipReport, PayslipSort } from "@/services/payslip";
 import { payslipReportSchema } from "@/services/payslip";
-import { sortPayslipPlayers } from "@/services/payslip";
+import { matchesPayslipEligibility, sortPayslipPlayers } from "@/services/payslip";
 
 export function PayslipView({ initialData }: { initialData: PayslipReport | null }) {
   const { report, loading, error, changeMonth, retry } = usePeriodReport({
@@ -27,9 +27,30 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
     schema: payslipReportSchema,
   });
   const [query, setQuery] = useState("");
-  const [eligibility, setEligibility] = useState<"all" | "eligible" | "ineligible">("all");
+  const [eligibility, setEligibility] = useState<PayslipEligibility>("all");
+  const [showPayslip, setShowPayslip] = useState(true);
   const [sort, setSort] = useState<PayslipSort>("default");
   const { t } = useI18n();
+
+  useEffect(() => {
+    function togglePayslip(event: KeyboardEvent) {
+      if (
+        !event.ctrlKey ||
+        !event.shiftKey ||
+        event.altKey ||
+        event.metaKey ||
+        event.repeat ||
+        event.key.toLowerCase() !== "h"
+      )
+        return;
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable=true]")) return;
+      event.preventDefault();
+      setShowPayslip((visible) => !visible);
+    }
+    window.addEventListener("keydown", togglePayslip);
+    return () => window.removeEventListener("keydown", togglePayslip);
+  }, []);
 
   if (!report)
     return (
@@ -44,11 +65,10 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
   const filtered = report.players.filter((player) => {
     const matchesQuery =
       !normalizedQuery ||
-      [player.character_name, player.display_name, player.username].some((value) =>
+      [player.character_name, player.display_name, player.username, ...(player.roles ?? [])].some((value) =>
         value.toLocaleLowerCase().includes(normalizedQuery),
       );
-    const matchesEligibility =
-      eligibility === "all" || (eligibility === "eligible" ? player.eligible : !player.eligible);
+    const matchesEligibility = matchesPayslipEligibility(player, eligibility);
     return matchesQuery && matchesEligibility;
   });
   const players = sortPayslipPlayers(filtered, sort);
@@ -71,6 +91,8 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
           { label: t("All eligibility"), value: "all" },
           { label: t("Eligible"), value: "eligible" },
           { label: t("Not eligible"), value: "ineligible" },
+          { label: t("Contract"), value: "contract" },
+          { label: t("Excluded"), value: "excluded" },
         ]}
         value={eligibility}
       />
@@ -137,7 +159,7 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
             { label: "Discord" },
             { label: "Attendance" },
             { label: "Eligibility" },
-            { label: "Payslip" },
+            ...(showPayslip ? [{ label: "Payslip" }] : []),
           ]}
           empty={t("No matching players found.")}
           summary={t("{count} found", { count: players.length })}
@@ -173,9 +195,11 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
                       : t("MIN. {count} DAYS", { count: report.attendance_minimum })}
                 </span>
               </DataTableCell>
-              <DataTableCell className="font-bold text-[var(--color-primary-bright)]">
-                {player.excluded ? "—" : formatRupiah(player.payout)}
-              </DataTableCell>
+              {showPayslip ? (
+                <DataTableCell className="font-bold text-[var(--color-primary-bright)]">
+                  {player.excluded ? "—" : formatRupiah(player.payout)}
+                </DataTableCell>
+              ) : null}
             </tr>
           ))}
         </DataTable>

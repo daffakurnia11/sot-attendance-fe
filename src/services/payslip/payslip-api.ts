@@ -28,6 +28,23 @@ export const payslipReportSchema = z.object({
 });
 
 export type PayslipReport = z.infer<typeof payslipReportSchema>;
+export type PayslipEligibility = "all" | "eligible" | "ineligible" | "contract" | "excluded";
+
+export function matchesPayslipEligibility(player: PayslipReport["players"][number], filter: PayslipEligibility) {
+  switch (filter) {
+    case "eligible":
+      return !player.excluded && player.eligible;
+    case "ineligible":
+      return !player.excluded && !player.eligible;
+    case "contract":
+      return !player.excluded;
+    case "excluded":
+      return Boolean(player.excluded);
+    default:
+      return true;
+  }
+}
+
 export type PayslipSort = "default" | "attendance-desc" | "attendance-asc" | "payslip-desc" | "payslip-asc";
 
 export function sortPayslipPlayers(players: PayslipReport["players"], sort: PayslipSort) {

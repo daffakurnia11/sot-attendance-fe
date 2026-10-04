@@ -41,19 +41,17 @@ describe("fetchMemberRecords", () => {
     );
   });
   it("forwards selected Discord identity through the authenticated API", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            total_playtime_seconds: 0,
-            total_attended: 0,
-            total_attendances: 0,
-            player_logs: [],
-            attendance_logs: [],
-          }),
-        ),
-      );
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          total_playtime_seconds: 0,
+          total_attended: 0,
+          total_attendances: 0,
+          player_logs: [],
+          attendance_logs: [],
+        }),
+      ),
+    );
     await fetchMemberRecords("http://api.test", "token", fetcher as typeof fetch, "406954574998536202");
     expect(fetcher).toHaveBeenCalledWith(
       new URL("http://api.test/api/v1/me/records?discord_user_id=406954574998536202"),
