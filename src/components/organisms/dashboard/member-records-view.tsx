@@ -1,126 +1,145 @@
 "use client";
 
-import { useState } from "react";
-
-import {
-  DataTable,
-  DataTableCell,
-  dataTableRowClassName,
-  paginateItems,
-  ResourceState,
-  StatisticsSection,
-  StatusIndicator,
-  TablePagination,
-} from "@/components/atoms";
+import { AttendanceCalendarGrid, Panel, PeriodNavigator, ResourceState, StatisticsSection } from "@/components/atoms";
+import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
+import { getPersonalAttendanceDays, getRequiredAttendanceRate, splitPlaytime } from "@/lib/member-attendance";
+import { formatPeriod } from "@/lib/report-period";
+import { type AttendanceReport, attendanceReportSchema, groupAttendanceWeeks } from "@/services/attendance";
 import type { MemberRecords } from "@/services/member-records";
 
-export function MemberRecordsView({ data }: { data: MemberRecords | null }) {
-  const [playerPage, setPlayerPage] = useState(1);
-  const [attendancePage, setAttendancePage] = useState(1);
-  const { locale, t, translate } = useI18n();
-  if (!data) return <ResourceState state="unavailable" message={t("Personal records could not be loaded.")} />;
-  const attendanceRate = data.total_attendances ? Math.round((data.total_attended / data.total_attendances) * 100) : 0;
-  const statistics = [
-    { label: t("Total playtime"), value: formatDuration(data.total_playtime_seconds) },
-    { label: t("Total attended"), value: String(data.total_attended) },
-    { label: t("Attendance rate"), value: `${attendanceRate}%` },
-  ];
+type Props = Readonly<{
+  data: MemberRecords | null;
+  initialAttendance: AttendanceReport | null;
+  minimumAttendance: number | null;
+  maximumAttendance: number | null;
+  today: string;
+}>;
 
+export function MemberRecordsView({ data, initialAttendance, minimumAttendance, maximumAttendance, today }: Props) {
+  const { report, loading, error, changeMonth, retry } = usePeriodReport({
+    initialData: initialAttendance,
+    endpoint: "/api/attendance/me",
+    schema: attendanceReportSchema,
+  });
+  const { locale, t } = useI18n();
+  const duration = data ? splitPlaytime(data.total_playtime_seconds) : null;
+  const periodNote = initialAttendance
+    ? formatPeriod(initialAttendance.period_start, initialAttendance.period_end, locale)
+    : t("Current contract period");
+  const statistics = [
+    {
+      label: t("Total playtime"),
+      value: duration
+        ? [
+            duration.months > 0 ? t("{months}mo", duration) : null,
+            duration.days > 0 ? t("{days}d", duration) : null,
+            duration.hours > 0 ? t("{hours}h", duration) : null,
+            duration.minutes > 0 ? t("{minutes}m", duration) : null,
+          ]
+            .filter(Boolean)
+            .join(" ") || t("{minutes}m", { minutes: 0 })
+        : "—",
+      note: t("Lifetime playtime · 1 month = 30 days"),
+    },
+    {
+      label: t("Total attended"),
+      value:
+        initialAttendance && minimumAttendance !== null
+          ? `${initialAttendance.total_attended} / ${minimumAttendance}`
+          : "—",
+      note: periodNote,
+    },
+    {
+      label: t("Attendance rate"),
+      value:
+        initialAttendance && maximumAttendance !== null
+          ? `${getRequiredAttendanceRate(initialAttendance.total_attended, maximumAttendance)}%`
+          : "—",
+      note: periodNote,
+    },
+  ];
+  const days = report ? getPersonalAttendanceDays(report, today) : [];
   return (
     <>
       <StatisticsSection index="01" title="My Statistics" items={statistics} />
-
-      <div className="mt-6">
-        <DataTable
-          title="Player Logs"
-          code="PL"
-          columns={[{ label: "Status" }, { label: "Started" }, { label: "Occurred" }, { label: "Playtime" }]}
-          empty="No player activity recorded."
-          footer={<TablePagination onPageChange={setPlayerPage} page={playerPage} total={data.player_logs.length} />}
-        >
-          {paginateItems(data.player_logs, playerPage).map((log) => (
-            <tr className={dataTableRowClassName} key={log.id}>
-              <DataTableCell>
-                <Status label={translate(log.status)} value={log.status} />
-              </DataTableCell>
-              <DataTableCell>{formatDateTime(log.started_at, locale)}</DataTableCell>
-              <DataTableCell>{formatDateTime(log.occurred_at, locale)}</DataTableCell>
-              <DataTableCell>
-                {log.playtime_seconds === null ? "—" : formatDuration(log.playtime_seconds)}
-              </DataTableCell>
-            </tr>
-          ))}
-        </DataTable>
-      </div>
-
-      <div className="mt-6">
-        <DataTable
-          title="Attendance Logs"
-          code="AT"
-          columns={[
-            { label: "Date" },
-            { label: "Window" },
-            { label: "Playtime" },
-            { label: "Required" },
-            { label: "Result" },
-          ]}
-          empty="No attendance recorded."
-          footer={
-            <TablePagination
-              onPageChange={setAttendancePage}
-              page={attendancePage}
-              total={data.attendance_logs.length}
+      {!data || !initialAttendance || minimumAttendance === null || maximumAttendance === null ? (
+        <ResourceState state="unavailable" message={t("Personal records could not be loaded.")} />
+      ) : null}
+      {!report ? (
+        <ResourceState
+          state={loading ? "loading" : "unavailable"}
+          message={t("Attendance data could not be loaded.")}
+          onRetry={() => void retry()}
+        />
+      ) : (
+        <Panel
+          className="mt-6"
+          title={t("My attendance calendar")}
+          summary={t("{count} attendance days", { count: report.total_attended })}
+          action={
+            <PeriodNavigator
+              start={report.period_start}
+              end={report.period_end}
+              loading={loading}
+              onChange={(offset) => void changeMonth(offset)}
             />
           }
         >
-          {paginateItems(data.attendance_logs, attendancePage).map((log) => (
-            <tr className={dataTableRowClassName} key={log.id}>
-              <DataTableCell>{formatDate(log.attendance_start, locale)}</DataTableCell>
-              <DataTableCell>
-                {formatTime(log.attendance_start, locale)}–{formatTime(log.attendance_end, locale)}
-              </DataTableCell>
-              <DataTableCell>{formatDuration(log.playtime_seconds)}</DataTableCell>
-              <DataTableCell>{formatDuration(log.required_playtime_seconds)}</DataTableCell>
-              <DataTableCell>
-                <Status
-                  label={translate(log.is_attended ? "attended" : "not attended")}
-                  value={log.is_attended ? "attended" : "not attended"}
-                />
-              </DataTableCell>
-            </tr>
-          ))}
-        </DataTable>
-      </div>
+          {error ? (
+            <ResourceState state="stale" message={t("Could not load selected month.")} onRetry={() => void retry()} />
+          ) : null}
+          <div
+            className={`overflow-x-auto p-4 transition-opacity sm:p-5 ${loading ? "opacity-45" : "opacity-100"}`}
+            aria-busy={loading}
+          >
+            <AttendanceCalendarGrid locale={locale}>
+              {groupAttendanceWeeks(days).flatMap((week, weekIndex) =>
+                week.map((day, dayIndex) => {
+                  if (!day) return <span aria-hidden="true" key={`empty-${weekIndex}-${dayIndex}`} />;
+                  const positive = day.result === "Attended";
+                  const missed = day.result === "Not attended";
+                  const color = positive
+                    ? "text-[var(--color-success)]"
+                    : missed
+                      ? "text-[var(--color-danger-soft)]"
+                      : "text-[var(--color-foreground-muted)]";
+                  const card = positive
+                    ? "border-[rgba(85,223,189,.28)] bg-[rgba(42,211,169,.06)]"
+                    : missed
+                      ? "border-[rgba(239,116,116,.3)] bg-[rgba(239,116,116,.06)]"
+                      : "border-[var(--color-border)] bg-[rgba(255,255,255,.012)]";
+                  return (
+                    <div className={`border p-3.5 ${card}`} key={day.date}>
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs tracking-[.14em] text-[var(--color-foreground-muted)] uppercase">
+                          {new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", {
+                            month: "short",
+                            timeZone: "UTC",
+                          }).format(new Date(`${day.date}T00:00:00Z`))}
+                        </span>
+                        <i
+                          className={`mt-1 h-2 w-2 shrink-0 rounded-full ${positive ? "bg-[var(--color-success)]" : missed ? "bg-[var(--color-danger-soft)]" : "bg-[rgba(185,172,145,.35)]"}`}
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <strong className="mt-1 block font-display text-3xl leading-none font-normal">
+                        {Number(day.date.slice(-2))}
+                      </strong>
+                      <p className={`mt-2.5 text-sm font-bold ${color}`}>
+                        {Math.floor(day.playtimeSeconds / 3600)}h {Math.floor((day.playtimeSeconds % 3600) / 60)}m
+                      </p>
+                      <p className={`mt-1 text-xs font-extrabold tracking-[.12em] uppercase ${color}`}>
+                        {t(day.result)}
+                      </p>
+                    </div>
+                  );
+                }),
+              )}
+            </AttendanceCalendarGrid>
+          </div>
+        </Panel>
+      )}
     </>
   );
-}
-
-function Status({ label, value }: { label: string; value: string }) {
-  const positive = ["connected", "attended"].includes(value);
-  const pending = value === "connecting";
-  return <StatusIndicator tone={positive ? "success" : pending ? "warning" : "danger"}>{label}</StatusIndicator>;
-}
-
-function formatDuration(seconds: number) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours}h ${minutes}m`;
-}
-function formatDate(value: string, locale: "en" | "id") {
-  return new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en-GB", {
-    dateStyle: "medium",
-    timeZone: "Asia/Jakarta",
-  }).format(new Date(value));
-}
-function formatTime(value: string, locale: "en" | "id") {
-  return new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Asia/Jakarta",
-  }).format(new Date(value));
-}
-function formatDateTime(value: string | null, locale: "en" | "id") {
-  return value ? `${formatDate(value, locale)}, ${formatTime(value, locale)}` : "—";
 }

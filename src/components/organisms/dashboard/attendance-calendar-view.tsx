@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { MetricCard, Panel, PeriodNavigator, ResourceState } from "@/components/atoms";
+import { AttendanceCalendarGrid, MetricCard, Panel, PeriodNavigator, ResourceState } from "@/components/atoms";
 import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
 import type { AttendanceDayStatus, AttendanceReport } from "@/services/attendance";
@@ -120,15 +120,7 @@ export function AttendanceCalendarView({ initialData, playerThreshold, today, co
           className={`overflow-x-auto p-4 transition-opacity sm:p-5 ${loading ? "opacity-45" : "opacity-100"}`}
           aria-busy={loading}
         >
-          <div className="grid min-w-[760px] grid-cols-7 gap-3">
-            {weekdayHeadings(locale).map((weekday) => (
-              <span
-                className="pb-1 text-center text-xs font-black tracking-[.14em] text-[var(--color-primary-muted)] uppercase"
-                key={weekday}
-              >
-                {weekday}
-              </span>
-            ))}
+          <AttendanceCalendarGrid locale={locale}>
             {weeks.flatMap((week, weekIndex) =>
               week.map((day, dayIndex) => {
                 // Empty slots keep the remaining days under the right weekday; the
@@ -163,7 +155,7 @@ export function AttendanceCalendarView({ initialData, playerThreshold, today, co
                 );
               }),
             )}
-          </div>
+          </AttendanceCalendarGrid>
         </div>
       </Panel>
 
@@ -198,11 +190,4 @@ function formatMonth(date: string, locale: "en" | "id") {
   return new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", { month: "short", timeZone: "UTC" }).format(
     new Date(`${date}T00:00:00Z`),
   );
-}
-
-// 2026-08-03 is a Monday, so seven days from it give Monday-first headings in
-// whichever locale is active.
-function weekdayHeadings(locale: "en" | "id") {
-  const formatter = new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en", { weekday: "short", timeZone: "UTC" });
-  return Array.from({ length: 7 }, (_unused, offset) => formatter.format(new Date(Date.UTC(2026, 7, 3 + offset))));
 }

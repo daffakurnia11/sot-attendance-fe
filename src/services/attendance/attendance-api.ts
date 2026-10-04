@@ -245,9 +245,9 @@ export function getMondayIndex(date: string) {
  * weekday index rather than by counting forward, so a gap in the dates cannot
  * shift the rest of the grid.
  */
-export function groupAttendanceWeeks(days: readonly AttendanceDay[]): (AttendanceDay | null)[][] {
-  const weeks: (AttendanceDay | null)[][] = [];
-  let week: (AttendanceDay | null)[] = [];
+export function groupAttendanceWeeks<T extends { date: string }>(days: readonly T[]): (T | null)[][] {
+  const weeks: (T | null)[][] = [];
+  let week: (T | null)[] = [];
 
   for (const day of days) {
     const index = getMondayIndex(day.date);
@@ -262,7 +262,7 @@ export function groupAttendanceWeeks(days: readonly AttendanceDay[]): (Attendanc
   return weeks;
 }
 
-function pad(week: (AttendanceDay | null)[]) {
+function pad<T>(week: (T | null)[]) {
   while (week.length < 7) week.push(null);
   return week;
 }

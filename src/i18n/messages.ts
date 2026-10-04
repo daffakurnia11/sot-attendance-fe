@@ -1,4 +1,13 @@
 export const en = {
+  "Current contract period": "Current contract period",
+  "My attendance calendar": "My attendance calendar",
+  "Lifetime playtime · 1 month = 30 days": "Lifetime playtime · 1 month = 30 days",
+  "{months}mo": "{months}mo",
+  "{days}d": "{days}d",
+  "{hours}h": "{hours}h",
+  "{minutes}m": "{minutes}m",
+  Unrecorded: "Unrecorded",
+
   Item: "Item",
   Qty: "Qty",
   "Quantity for {item}": "Quantity for {item}",
@@ -401,6 +410,14 @@ export type MessageKey = keyof typeof en;
 
 export const id: Record<MessageKey, string> = {
   ...en,
+  "Current contract period": "Periode kontrak saat ini",
+  "My attendance calendar": "Kalender kehadiran saya",
+  "Lifetime playtime · 1 month = 30 days": "Total waktu bermain · 1 bulan = 30 hari",
+  "{months}mo": "{months}bln",
+  "{days}d": "{days}hri",
+  "{hours}h": "{hours}j",
+  "{minutes}m": "{minutes}m",
+  Unrecorded: "Belum tercatat",
   Item: "Barang",
   Qty: "Jumlah",
   "Quantity for {item}": "Jumlah untuk {item}",
