@@ -25,7 +25,7 @@ describe("shared design flows", () => {
       createElement(
         DashboardPage,
         { title: "Attendance", eyebrow: "Member records", description: "Monthly attendance records for all members." },
-        createElement(AttendanceView, { initialData: null }),
+        createElement(AttendanceView, { initialData: null, maximumAttendance: 26 }),
       ),
     );
     expect(html).toMatch(/<h1[^>]*>Attendance<\/h1>/);

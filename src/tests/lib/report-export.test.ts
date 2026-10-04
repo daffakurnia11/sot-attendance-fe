@@ -53,11 +53,11 @@ describe("report export data", () => {
       ],
     };
 
-    const sheet = buildAttendanceSheet(report);
+    const sheet = buildAttendanceSheet(report, 26);
     expect(sheet.rows).toHaveLength(3);
     expect(sheet.rows.map((row) => row[0])).toEqual(["Bravo", "Alpha", "Kenji"]);
     expect(sheet.rows[2].slice(3, 6)).toEqual(["✓", "✗", "—"]);
-    expect(sheet.rows[2].at(-1)).toBe(0.5);
+    expect(sheet.rows[2].at(-1)).toBe(1 / 26);
   });
 
   it("exports payslip summary and every player using numeric amounts", () => {

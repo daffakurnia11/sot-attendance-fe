@@ -8,7 +8,7 @@ export type ExportSheet = Readonly<{
   rows: readonly (readonly (string | number | boolean)[])[];
 }>;
 
-export function buildAttendanceSheet(report: AttendanceReport): ExportSheet {
+export function buildAttendanceSheet(report: AttendanceReport, maximumAttendance: number | null): ExportSheet {
   const attendanceDayCount = report.attendance_days.length;
   const members = [...report.members].sort((left, right) => {
     const leftRate = attendanceDayCount ? left.total_attended / attendanceDayCount : 0;
@@ -33,7 +33,7 @@ export function buildAttendanceSheet(report: AttendanceReport): ExportSheet {
     ],
     rows: members.map((member) => {
       const records = new Map(member.records.map((record) => [record.date, record]));
-      const rate = attendanceDayCount ? member.total_attended / attendanceDayCount : 0;
+      const rate = maximumAttendance ? member.total_attended / maximumAttendance : "";
       return [
         member.character_name || "-",
         member.display_name,

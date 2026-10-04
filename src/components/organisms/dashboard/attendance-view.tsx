@@ -15,6 +15,7 @@ import {
 import { routes } from "@/config/routes";
 import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
+import { getRequiredAttendanceRate } from "@/lib/member-attendance";
 import { buildAttendanceSheet } from "@/lib/report-export";
 import type { AttendanceReport, AttendanceSort } from "@/services/attendance";
 import { attendanceReportSchema } from "@/services/attendance";
@@ -30,10 +31,12 @@ import { AttendanceModeTabs } from "./attendance-mode-tabs";
 
 export function AttendanceView({
   initialData,
+  maximumAttendance,
   personal = false,
   combined = false,
 }: {
   initialData: AttendanceReport | null;
+  maximumAttendance: number | null;
   personal?: boolean;
   combined?: boolean;
 }) {
@@ -64,7 +67,7 @@ export function AttendanceView({
         ),
       )
     : report.members;
-  const members = sortAttendanceMembers(filteredMembers, sort, report.attendance_days.length);
+  const members = sortAttendanceMembers(filteredMembers, sort, maximumAttendance ?? 0);
   const monthly = getAttendanceSummary(report);
   const latest = getLatestAttendanceSummary(report);
   const dates = report.period_dates;
@@ -92,7 +95,7 @@ export function AttendanceView({
         action={
           <ReportExportButton
             filename={`attendance-${report.period_start}-${report.period_end}`}
-            sheets={[buildAttendanceSheet(report)]}
+            sheets={[buildAttendanceSheet(report, maximumAttendance)]}
           />
         }
       >
@@ -172,9 +175,7 @@ export function AttendanceView({
             {members.map((member) => {
               const records = new Map(member.records.map((record) => [record.date, record]));
               const memberRate =
-                report.attendance_days.length === 0
-                  ? 0
-                  : Math.round((member.total_attended / report.attendance_days.length) * 100);
+                maximumAttendance === null ? null : getRequiredAttendanceRate(member.total_attended, maximumAttendance);
               return (
                 <div
                   className="relative isolate grid min-h-[52px] grid-cols-[240px_repeat(var(--days),38px)_100px_70px_64px] border-b border-[rgba(217,169,80,.1)] text-sm last:border-b-0"
@@ -194,7 +195,7 @@ export function AttendanceView({
                         {member.character_name || "-"}
                       </strong>
                       <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[var(--color-foreground-muted)]">
-                        @{member.username}
+                        {member.username}
                       </span>
                     </span>
                   </Link>
@@ -241,7 +242,7 @@ export function AttendanceView({
                     {member.total_attended}
                   </strong>
                   <strong className="grid place-items-center bg-[var(--color-background-soft)] text-[var(--color-foreground-muted)] md:sticky md:right-0 md:z-10">
-                    {memberRate}%
+                    {memberRate === null ? "—" : `${memberRate}%`}
                   </strong>
                 </div>
               );

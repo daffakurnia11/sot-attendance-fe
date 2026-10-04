@@ -2,6 +2,7 @@
 
 import { AttendanceDetailDialog } from "@/components/atoms";
 import { useI18n } from "@/i18n";
+import { getRequiredAttendanceRate } from "@/lib/member-attendance";
 import type { AttendanceMemberDay, AttendanceReport } from "@/services/attendance";
 import { getAttendanceMemberDetail } from "@/services/attendance";
 
@@ -10,9 +11,10 @@ type Props = Readonly<{
   memberID: number | null;
   onClose: () => void;
   report: AttendanceReport;
+  maximumAttendance: number | null;
 }>;
 
-export function AttendanceMemberDetail({ memberID, onClose, report }: Props) {
+export function AttendanceMemberDetail({ memberID, onClose, report, maximumAttendance }: Props) {
   const { locale, t } = useI18n();
   if (memberID === null) return null;
 
@@ -21,7 +23,7 @@ export function AttendanceMemberDetail({ memberID, onClose, report }: Props) {
   // before this renders, so a missing member closes rather than throws.
   if (!detail) return null;
 
-  const rate = detail.attendanceDays === 0 ? 0 : Math.round((detail.attended.length / detail.attendanceDays) * 100);
+  const rate = maximumAttendance === null ? null : getRequiredAttendanceRate(detail.attended.length, maximumAttendance);
   const groups = [
     { key: "attended", tone: "success" as const, label: t("Attended"), members: detail.attended, showPlaytime: true },
     { key: "missed", tone: "danger" as const, label: t("Not Attended"), members: detail.missed, showPlaytime: true },
@@ -44,9 +46,9 @@ export function AttendanceMemberDetail({ memberID, onClose, report }: Props) {
       summary={
         <>
           {" "}
-          @{detail.username} ·{" "}
+          {detail.username} ·{" "}
           {t("{attended} of {days} attendance days", { attended: detail.attended.length, days: detail.attendanceDays })}{" "}
-          · {rate}% · {formatDuration(detail.totalPlaytimeSeconds)}
+          · {rate === null ? "—" : `${rate}%`} · {formatDuration(detail.totalPlaytimeSeconds)}
         </>
       }
       groups={groups.map((group) => ({

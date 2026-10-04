@@ -81,6 +81,28 @@ describe("sortAttendanceMembers", () => {
     expect(sortAttendanceMembers(members, "default", 1).map((member) => member.member_id)).toEqual([1, 2]);
   });
 
+  it("breaks default attendance ties by playtime descending, then member id", () => {
+    const members = [
+      { ...valid.members[0], member_id: 3 },
+      {
+        ...valid.members[0],
+        discord_user_id: "2",
+        member_id: 2,
+        records: [{ date: "2026-09-14", is_attended: true, playtime_seconds: 7200 }],
+      },
+      { ...valid.members[0], member_id: 1 },
+      {
+        ...valid.members[0],
+        discord_user_id: "4",
+        member_id: 4,
+        total_attended: 0,
+        records: [{ date: "2026-09-14", is_attended: false, playtime_seconds: 10000 }],
+      },
+    ];
+    expect(sortAttendanceMembers(members, "default", 1).map((member) => member.member_id)).toEqual([2, 1, 3, 4]);
+    expect(members.map((member) => member.member_id)).toEqual([3, 2, 1, 4]);
+  });
+
   it("sorts by total without mutating API order", () => {
     const members = valid.members;
     expect(sortAttendanceMembers(members, "total-asc", 1).map((member) => member.member_id)).toEqual([2, 1]);

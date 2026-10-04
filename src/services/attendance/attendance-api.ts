@@ -76,7 +76,11 @@ export function sortAttendanceMembers(
 
   return [...members].sort((left, right) => {
     const difference = value(left) - value(right);
-    return difference === 0 ? left.member_id - right.member_id : difference * direction;
+    return (
+      difference * direction ||
+      (sort === "default" ? getMemberTotalPlaytime(right) - getMemberTotalPlaytime(left) : 0) ||
+      left.member_id - right.member_id
+    );
   });
 }
 

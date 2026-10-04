@@ -85,7 +85,7 @@ function MemberList({
         >
           <span className="min-w-0">
             <strong className="text-[var(--color-foreground)]">{member.name}</strong>
-            <span className="ml-2 text-xs text-[var(--color-foreground-muted)]">@{member.username}</span>
+            <span className="ml-2 text-xs text-[var(--color-foreground-muted)]">{member.username}</span>
           </span>
           {showPlaytime ? (
             <span className="shrink-0 text-xs text-[var(--color-foreground-muted)]">

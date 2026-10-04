@@ -14,6 +14,8 @@ export default async function AttendancePage({ searchParams }: Readonly<{ search
   const view: AttendanceMode = requestedView === "calendar" ? "calendar" : "recap";
   const report = await loadAttendance();
 
+  const settings = report ? await loadSettings() : null;
+
   if (view === "recap")
     return (
       <DashboardPage
@@ -21,13 +23,16 @@ export default async function AttendancePage({ searchParams }: Readonly<{ search
         eyebrow="Member records"
         description="Monthly member totals and daily turnout across the contract period."
       >
-        <AttendanceView combined initialData={report} />
+        <AttendanceView
+          combined
+          initialData={report}
+          maximumAttendance={settings ? Number(settings.attendance_maximum) : null}
+        />
       </DashboardPage>
     );
 
   // Keep the remote database reads sequential. Running both together can push
   // attendance past its request deadline when the database tunnel is slow.
-  const settings = report ? await loadSettings() : null;
   const parsedThreshold = Number(settings?.player_threshold);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
   return (
