@@ -27,8 +27,15 @@ export const memberRecordsSchema = z.object({
 
 export type MemberRecords = z.infer<typeof memberRecordsSchema>;
 
-export async function fetchMemberRecords(baseURL: string, accessToken: string, fetcher: typeof fetch = fetch) {
-  const response = await fetcher(new URL("/api/v1/me/records", baseURL), {
+export async function fetchMemberRecords(
+  baseURL: string,
+  accessToken: string,
+  fetcher: typeof fetch = fetch,
+  discordUserID?: string,
+) {
+  const url = new URL("/api/v1/me/records", baseURL);
+  if (discordUserID) url.searchParams.set("discord_user_id", discordUserID);
+  const response = await fetcher(url, {
     headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
     signal: AbortSignal.timeout(5_000),

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { getPersonalAttendanceDays, getRequiredAttendanceRate, splitPlaytime } from "@/lib/member-attendance";
+import {
+  getPersonalAttendanceDays,
+  getRequiredAttendanceRate,
+  selectMemberAttendance,
+  splitPlaytime,
+} from "@/lib/member-attendance";
 import type { AttendanceReport } from "@/services/attendance";
 
 describe("personal attendance", () => {
@@ -33,5 +38,50 @@ describe("personal attendance", () => {
       "Upcoming",
     ]);
     expect(getPersonalAttendanceDays({ ...report, members: [] }, "2026-09-30")[0].result).toBe("Unrecorded");
+  });
+});
+
+describe("member attendance selection", () => {
+  it("isolates the chosen Discord member and recalculates totals", () => {
+    const first = {
+      member_id: 1,
+      username: "first",
+      display_name: "First",
+      character_name: "First",
+      discord_user_id: "282921788659335169",
+      total_attended: 4,
+      records: [],
+    };
+    const second = {
+      member_id: 2,
+      username: "second",
+      display_name: "Second",
+      character_name: "Second",
+      discord_user_id: "406954574998536202",
+      total_attended: 3,
+      records: [],
+    };
+    const roster: AttendanceReport = {
+      month: "2026-09",
+      days_in_month: 30,
+      period_start: "2026-09-28",
+      period_end: "2026-10-27",
+      period_dates: [],
+      members: [first, second],
+      attendance_days: ["2026-09-28", "2026-09-29"],
+      total_attended: 7,
+      total_opportunities: 4,
+    };
+    expect(selectMemberAttendance(roster, second.discord_user_id)).toMatchObject({
+      members: [second],
+      total_attended: 3,
+      total_opportunities: 2,
+    });
+    expect(selectMemberAttendance(roster, "999")).toMatchObject({
+      members: [],
+      total_attended: 0,
+      total_opportunities: 0,
+    });
+    expect(roster.members).toHaveLength(2);
   });
 });

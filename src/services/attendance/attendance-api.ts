@@ -7,6 +7,7 @@ const dailyRecordSchema = z.object({
 });
 
 const memberRecordSchema = z.object({
+  discord_user_id: z.string().regex(/^\d{1,20}$/),
   member_id: z.number().int().positive(),
   username: z.string(),
   display_name: z.string(),

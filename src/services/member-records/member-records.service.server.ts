@@ -4,6 +4,6 @@ import { loadForMember } from "@/lib/session.server";
 
 import { fetchMemberRecords } from "./member-records-api";
 
-export function loadMemberRecords() {
-  return loadForMember("/my-records", fetchMemberRecords);
+export function loadMemberRecords(discordUserID?: string) {
+  return loadForMember("/my-records", (url, token) => fetchMemberRecords(url, token, fetch, discordUserID));
 }

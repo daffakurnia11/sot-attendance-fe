@@ -14,12 +14,22 @@ type Props = Readonly<{
   minimumAttendance: number | null;
   maximumAttendance: number | null;
   today: string;
+  discordUserID?: string;
 }>;
 
-export function MemberRecordsView({ data, initialAttendance, minimumAttendance, maximumAttendance, today }: Props) {
+export function MemberRecordsView({
+  data,
+  initialAttendance,
+  minimumAttendance,
+  maximumAttendance,
+  today,
+  discordUserID,
+}: Props) {
   const { report, loading, error, changeMonth, retry } = usePeriodReport({
     initialData: initialAttendance,
-    endpoint: "/api/attendance/me",
+    endpoint: discordUserID
+      ? `/api/attendance/member?discord_user_id=${encodeURIComponent(discordUserID)}`
+      : "/api/attendance/me",
     schema: attendanceReportSchema,
   });
   const { locale, t } = useI18n();
@@ -62,7 +72,7 @@ export function MemberRecordsView({ data, initialAttendance, minimumAttendance, 
   const days = report ? getPersonalAttendanceDays(report, today) : [];
   return (
     <>
-      <StatisticsSection index="01" title="My Statistics" items={statistics} />
+      <StatisticsSection index="01" title={discordUserID ? "Member statistics" : "My Statistics"} items={statistics} />
       {!data || !initialAttendance || minimumAttendance === null || maximumAttendance === null ? (
         <ResourceState state="unavailable" message={t("Personal records could not be loaded.")} />
       ) : null}
@@ -75,7 +85,7 @@ export function MemberRecordsView({ data, initialAttendance, minimumAttendance, 
       ) : (
         <Panel
           className="mt-6"
-          title={t("My attendance calendar")}
+          title={t(discordUserID ? "Attendance Calendar" : "My attendance calendar")}
           summary={t("{count} attendance days", { count: report.total_attended })}
           action={
             <PeriodNavigator

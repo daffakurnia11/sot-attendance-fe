@@ -28,6 +28,7 @@ const valid = {
   total_opportunities: 2,
   members: [
     {
+      discord_user_id: "1",
       member_id: 1,
       username: "delta",
       display_name: "Delta",
@@ -35,7 +36,15 @@ const valid = {
       total_attended: 1,
       records: [{ date: "2026-09-14", is_attended: true, playtime_seconds: 5400 }],
     },
-    { member_id: 2, username: "prince", display_name: "Prince", character_name: "", total_attended: 0, records: [] },
+    {
+      discord_user_id: "2",
+      member_id: 2,
+      username: "prince",
+      display_name: "Prince",
+      character_name: "",
+      total_attended: 0,
+      records: [],
+    },
   ],
 };
 
@@ -97,7 +106,7 @@ describe("getLatestAttendanceSummary", () => {
       members: [
         valid.members[0],
         { ...valid.members[1], records: [{ date: "2026-09-14", is_attended: false, playtime_seconds: 1200 }] },
-        { ...valid.members[1], member_id: 3, records: [] },
+        { ...valid.members[1], discord_user_id: "3", member_id: 3, records: [] },
       ],
     };
     expect(getLatestAttendanceSummary(report)).toEqual({ date: "2026-09-14", eligible: 1, total: 2, rate: 50 });
@@ -120,7 +129,7 @@ describe("getAttendanceSummary", () => {
       members: [
         valid.members[0],
         { ...valid.members[1], records: [{ date: "2026-09-14", is_attended: false, playtime_seconds: 1200 }] },
-        { ...valid.members[1], member_id: 3, records: [] },
+        { ...valid.members[1], discord_user_id: "3", member_id: 3, records: [] },
       ],
     };
     expect(getAttendanceSummary(report)).toEqual({ eligible: 1, total: 2, rate: 50 });
@@ -133,6 +142,7 @@ describe("getAttendanceCalendar", () => {
     period_dates: ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04"],
     members: [
       {
+        discord_user_id: "1",
         member_id: 1,
         username: "a",
         display_name: "A",
@@ -144,6 +154,7 @@ describe("getAttendanceCalendar", () => {
         ],
       },
       {
+        discord_user_id: "2",
         member_id: 2,
         username: "b",
         display_name: "B",
@@ -154,7 +165,15 @@ describe("getAttendanceCalendar", () => {
           { date: "2026-08-02", is_attended: false, playtime_seconds: 0 },
         ],
       },
-      { member_id: 3, username: "c", display_name: "C", character_name: "C", total_attended: 0, records: [] },
+      {
+        discord_user_id: "3",
+        member_id: 3,
+        username: "c",
+        display_name: "C",
+        character_name: "C",
+        total_attended: 0,
+        records: [],
+      },
     ],
   } as unknown as AttendanceReport;
 
@@ -254,6 +273,7 @@ describe("getAttendanceDayDetail", () => {
     ...valid,
     members: [
       {
+        discord_user_id: "1",
         member_id: 1,
         username: "short",
         display_name: "Short",
@@ -262,6 +282,7 @@ describe("getAttendanceDayDetail", () => {
         records: [{ date: "2026-08-05", is_attended: true, playtime_seconds: 3600 }],
       },
       {
+        discord_user_id: "2",
         member_id: 2,
         username: "long",
         display_name: "Long",
@@ -270,6 +291,7 @@ describe("getAttendanceDayDetail", () => {
         records: [{ date: "2026-08-05", is_attended: true, playtime_seconds: 10800 }],
       },
       {
+        discord_user_id: "3",
         member_id: 3,
         username: "missed",
         display_name: "Missed",
@@ -278,6 +300,7 @@ describe("getAttendanceDayDetail", () => {
         records: [{ date: "2026-08-05", is_attended: false, playtime_seconds: 120 }],
       },
       {
+        discord_user_id: "4",
         member_id: 4,
         username: "absent",
         display_name: "Fallback Name",
@@ -322,6 +345,7 @@ describe("getAttendanceMemberDetail", () => {
     period_dates: ["2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"],
     members: [
       {
+        discord_user_id: "7",
         member_id: 7,
         username: "seven",
         display_name: "Seven",
@@ -333,6 +357,7 @@ describe("getAttendanceMemberDetail", () => {
         ],
       },
       {
+        discord_user_id: "8",
         member_id: 8,
         username: "eight",
         display_name: "Discord Eight",

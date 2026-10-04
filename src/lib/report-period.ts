@@ -19,10 +19,13 @@ export async function fetchPeriodReport<T>(
   signal: AbortSignal,
   fetcher: typeof fetch = fetch,
 ): Promise<T> {
-  const response = await fetcher(`${endpoint}${month ? `?month=${encodeURIComponent(month)}` : ""}`, {
-    cache: "no-store",
-    signal,
-  });
+  const response = await fetcher(
+    `${endpoint}${month ? `${endpoint.includes("?") ? "&" : "?"}month=${encodeURIComponent(month)}` : ""}`,
+    {
+      cache: "no-store",
+      signal,
+    },
+  );
   if (!response.ok) throw new Error(`Report request failed (${response.status})`);
   return schema.parse(await response.json());
 }

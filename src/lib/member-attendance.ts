@@ -24,3 +24,13 @@ export function getPersonalAttendanceDays(report: AttendanceReport, today: strin
 export function getRequiredAttendanceRate(attended: number, required: number) {
   return required > 0 ? Math.round((attended / required) * 100) : 0;
 }
+
+export function selectMemberAttendance(report: AttendanceReport, discordUserID: string): AttendanceReport {
+  const members = report.members.filter((member) => member.discord_user_id === discordUserID);
+  return {
+    ...report,
+    members,
+    total_attended: members[0]?.total_attended ?? 0,
+    total_opportunities: members.length * report.attendance_days.length,
+  };
+}

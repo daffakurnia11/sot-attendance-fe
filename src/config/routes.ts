@@ -2,6 +2,7 @@ export const routes = {
   home: "/",
   dashboard: "/dashboard",
   myRecords: "/my-records",
+  memberRecords: (discordUserID: string) => `/attendance/members/${encodeURIComponent(discordUserID)}`,
   attendance: "/attendance",
   attendanceTabs: {
     recap: "/attendance?view=recap",

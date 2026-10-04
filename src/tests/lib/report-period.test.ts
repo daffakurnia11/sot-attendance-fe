@@ -51,3 +51,18 @@ describe("report period requests", () => {
     ).rejects.toMatchObject({ name: "AbortError" });
   });
 });
+
+it("preserves selected member while navigating periods", async () => {
+  let requested = "";
+  await fetchPeriodReport(
+    "/api/attendance/member?discord_user_id=406954574998536202",
+    "2026-09",
+    { parse: (value) => value },
+    new AbortController().signal,
+    async (url) => {
+      requested = String(url);
+      return new Response("{}");
+    },
+  );
+  expect(requested).toBe("/api/attendance/member?discord_user_id=406954574998536202&month=2026-09");
+});

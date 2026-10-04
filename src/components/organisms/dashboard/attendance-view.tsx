@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import {
@@ -11,6 +12,7 @@ import {
   ResourceState,
   SearchField,
 } from "@/components/atoms";
+import { routes } from "@/config/routes";
 import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
 import { buildAttendanceSheet } from "@/lib/report-export";
@@ -24,7 +26,6 @@ import {
 } from "@/services/attendance";
 
 import { AttendanceDayDetail } from "./attendance-day-detail";
-import { AttendanceMemberDetail } from "./attendance-member-detail";
 import { AttendanceModeTabs } from "./attendance-mode-tabs";
 
 export function AttendanceView({
@@ -44,7 +45,6 @@ export function AttendanceView({
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<AttendanceSort>("default");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedMember, setSelectedMember] = useState<number | null>(null);
   const { t } = useI18n();
 
   if (!report)
@@ -181,11 +181,10 @@ export function AttendanceView({
                   style={{ "--days": report.days_in_month } as React.CSSProperties}
                   key={member.member_id}
                 >
-                  <button
+                  <Link
                     aria-label={t("Show member detail")}
                     className="relative flex cursor-pointer items-center gap-2.5 bg-[var(--color-background-soft)] px-3 py-2 text-left transition-colors hover:bg-[#1d160b] md:sticky md:left-0 md:z-30 md:border-r md:border-[var(--color-border)] md:shadow-[8px_0_12px_rgba(0,0,0,.25)]"
-                    onClick={() => setSelectedMember(member.member_id)}
-                    type="button"
+                    href={routes.memberRecords(member.discord_user_id)}
                   >
                     <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[rgba(242,182,61,.16)] text-xs font-black text-[var(--color-primary-bright)]">
                       {initials(member.character_name || member.username)}
@@ -198,7 +197,7 @@ export function AttendanceView({
                         @{member.username}
                       </span>
                     </span>
-                  </button>
+                  </Link>
                   {dates.map((date) => {
                     const record = records.get(date);
                     // Keyed on whether an attendance_logs row exists for this
@@ -257,7 +256,6 @@ export function AttendanceView({
       </Panel>
 
       <AttendanceDayDetail date={selectedDate} onClose={() => setSelectedDate(null)} report={report} />
-      <AttendanceMemberDetail memberID={selectedMember} onClose={() => setSelectedMember(null)} report={report} />
     </>
   );
 }

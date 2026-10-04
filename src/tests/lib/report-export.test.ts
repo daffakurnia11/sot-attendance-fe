@@ -18,6 +18,7 @@ describe("report export data", () => {
       total_opportunities: 2,
       members: [
         {
+          discord_user_id: "1",
           member_id: 1,
           username: "delta",
           display_name: "Delta",
@@ -29,6 +30,7 @@ describe("report export data", () => {
           ],
         },
         {
+          discord_user_id: "2",
           member_id: 2,
           username: "alpha",
           display_name: "Alpha",
@@ -37,6 +39,7 @@ describe("report export data", () => {
           records: [{ date: dates[0], is_attended: true, playtime_seconds: 7200 }],
         },
         {
+          discord_user_id: "3",
           member_id: 3,
           username: "bravo",
           display_name: "Bravo",
