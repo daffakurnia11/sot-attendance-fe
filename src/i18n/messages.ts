@@ -1,4 +1,6 @@
 export const en = {
+  EXCLUDED: "EXCLUDED",
+  "No CR role": "No CR role",
   "Current contract period": "Current contract period",
   "My attendance calendar": "My attendance calendar",
   "Lifetime playtime · 1 month = 30 days": "Lifetime playtime · 1 month = 30 days",
@@ -411,6 +413,8 @@ export type MessageKey = keyof typeof en;
 
 export const id: Record<MessageKey, string> = {
   ...en,
+  EXCLUDED: "DIKECUALIKAN",
+  "No CR role": "Tidak ada role CR",
   "Current contract period": "Periode kontrak saat ini",
   "My attendance calendar": "Kalender kehadiran saya",
   "Lifetime playtime · 1 month = 30 days": "Total waktu bermain · 1 bulan = 30 hari",

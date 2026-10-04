@@ -84,3 +84,15 @@ describe("sortPayslipPlayers", () => {
     expect(players).toEqual(original);
   });
 });
+
+it("preserves guild roles and excluded eligibility", async () => {
+  const payload = {
+    ...valid,
+    eligible_players: 0,
+    total_players: 0,
+    total_payout: "0",
+    players: [{ ...valid.players[0], roles: ["SOT CR Guest"], excluded: true, eligible: false, payout: "0" }],
+  };
+  const fetcher = async () => new Response(JSON.stringify(payload));
+  expect(await fetchPayslips("http://api.test", "token", undefined, fetcher as typeof fetch)).toEqual(payload);
+});

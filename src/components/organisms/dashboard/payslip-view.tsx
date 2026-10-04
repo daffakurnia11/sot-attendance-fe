@@ -153,8 +153,10 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
                 {player.character_name || "-"}
               </DataTableCell>
               <DataTableCell>
-                <span className="block text-[var(--color-foreground)]">{player.display_name}</span>
-                <span className="text-[var(--color-foreground-muted)]">@{player.username}</span>
+                <span className="block text-[var(--color-foreground)]">{player.username || "-"}</span>
+                <span className="text-xs text-[var(--color-foreground-muted)]">
+                  {player.roles?.length ? player.roles.join(" · ") : t("No CR role")}
+                </span>
               </DataTableCell>
               <DataTableCell>
                 {t("{attended} / {maximum} days", {
@@ -164,11 +166,15 @@ export function PayslipView({ initialData }: { initialData: PayslipReport | null
               </DataTableCell>
               <DataTableCell>
                 <span className={player.eligible ? "text-[var(--color-success)]" : "text-[var(--color-danger-soft)]"}>
-                  {player.eligible ? t("ELIGIBLE") : t("MIN. {count} DAYS", { count: report.attendance_minimum })}
+                  {player.excluded
+                    ? t("EXCLUDED")
+                    : player.eligible
+                      ? t("ELIGIBLE")
+                      : t("MIN. {count} DAYS", { count: report.attendance_minimum })}
                 </span>
               </DataTableCell>
               <DataTableCell className="font-bold text-[var(--color-primary-bright)]">
-                {formatRupiah(player.payout)}
+                {player.excluded ? "—" : formatRupiah(player.payout)}
               </DataTableCell>
             </tr>
           ))}

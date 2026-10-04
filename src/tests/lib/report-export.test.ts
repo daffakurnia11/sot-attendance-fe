@@ -86,6 +86,6 @@ describe("report export data", () => {
 
     const sheets = buildPayslipSheets(report);
     expect(sheets.map((sheet) => sheet.name)).toEqual(["Summary", "Payslips"]);
-    expect(sheets[1].rows[0]).toEqual(["Kenji", "Delta", "delta", 28, true, 8000000]);
+    expect(sheets[1].rows[0]).toEqual(["Kenji", "Delta", "delta", "", 28, true, false, 8000000]);
   });
 });

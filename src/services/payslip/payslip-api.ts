@@ -10,6 +10,8 @@ const payslipPlayerSchema = z.object({
   attended_days: z.number().int().nonnegative(),
   eligible: z.boolean(),
   payout: rupiahSchema,
+  roles: z.array(z.string()).optional(),
+  excluded: z.boolean().optional(),
 });
 
 export const payslipReportSchema = z.object({
@@ -57,7 +59,7 @@ export async function fetchPayslips(
   const response = await fetcher(url, {
     headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
-    signal: AbortSignal.timeout(5_000),
+    signal: AbortSignal.timeout(9_000),
   });
   if (!response.ok) throw new Error(`Payslip API returned ${response.status}`);
   const parsed = payslipReportSchema.safeParse(await response.json());

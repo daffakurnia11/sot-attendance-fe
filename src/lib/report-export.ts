@@ -67,13 +67,24 @@ export function buildPayslipSheets(report: PayslipReport): ExportSheet[] {
     },
     {
       name: "Payslips",
-      columns: ["Character Name", "Discord Name", "Discord Username", "Attendance", "Eligible", "Payslip"],
+      columns: [
+        "Character Name",
+        "Discord Name",
+        "Discord Username",
+        "Guild Roles",
+        "Attendance",
+        "Eligible",
+        "Excluded",
+        "Payslip",
+      ],
       rows: report.players.map((player) => [
         player.character_name || "-",
         player.display_name,
         player.username,
+        (player.roles ?? []).join(" · "),
         player.attended_days,
         player.eligible,
+        player.excluded ?? false,
         Number(player.payout),
       ]),
     },
@@ -116,7 +127,7 @@ export async function exportXlsx(filename: string, sheets: readonly ExportSheet[
     if (sheet.name === "Summary") {
       for (const row of [3, 8]) worksheet.getCell(row, 2).numFmt = '"Rp. "#,##0';
     }
-    if (sheet.name === "Payslips") worksheet.getColumn(6).numFmt = '"Rp. "#,##0';
+    if (sheet.name === "Payslips") worksheet.getColumn(sheet.columns.length).numFmt = '"Rp. "#,##0';
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
