@@ -1,12 +1,13 @@
 "use client";
 
-import { AttendanceCalendarGrid, Panel, PeriodNavigator, ResourceState, StatisticsSection } from "@/components/atoms";
+import { AttendanceCalendarGrid, Panel, PeriodNavigator, ResourceState } from "@/components/atoms";
 import { usePeriodReport } from "@/hooks/use-period-report";
 import { useI18n } from "@/i18n";
-import { getPersonalAttendanceDays, getRequiredAttendanceRate, splitPlaytime } from "@/lib/member-attendance";
-import { formatPeriod } from "@/lib/report-period";
+import { getPersonalAttendanceDays } from "@/lib/member-attendance";
 import { type AttendanceReport, attendanceReportSchema, groupAttendanceWeeks } from "@/services/attendance";
 import type { MemberRecords } from "@/services/member-records";
+
+import { MemberStatistics } from "./member-statistics";
 
 type Props = Readonly<{
   data: MemberRecords | null;
@@ -33,46 +34,16 @@ export function MemberRecordsView({
     schema: attendanceReportSchema,
   });
   const { locale, t } = useI18n();
-  const duration = data ? splitPlaytime(data.total_playtime_seconds) : null;
-  const periodNote = initialAttendance
-    ? formatPeriod(initialAttendance.period_start, initialAttendance.period_end, locale)
-    : t("Current contract period");
-  const statistics = [
-    {
-      label: t("Total playtime"),
-      value: duration
-        ? [
-            duration.months > 0 ? t("{months}mo", duration) : null,
-            duration.days > 0 ? t("{days}d", duration) : null,
-            duration.hours > 0 ? t("{hours}h", duration) : null,
-            duration.minutes > 0 ? t("{minutes}m", duration) : null,
-          ]
-            .filter(Boolean)
-            .join(" ") || t("{minutes}m", { minutes: 0 })
-        : "—",
-      note: t("Lifetime playtime · 1 month = 30 days"),
-    },
-    {
-      label: t("Total attended"),
-      value:
-        initialAttendance && minimumAttendance !== null
-          ? `${initialAttendance.total_attended} / ${minimumAttendance}`
-          : "—",
-      note: periodNote,
-    },
-    {
-      label: t("Attendance rate"),
-      value:
-        initialAttendance && maximumAttendance !== null
-          ? `${getRequiredAttendanceRate(initialAttendance.total_attended, maximumAttendance)}%`
-          : "—",
-      note: periodNote,
-    },
-  ];
   const days = report ? getPersonalAttendanceDays(report, today) : [];
   return (
     <>
-      <StatisticsSection index="01" title={discordUserID ? "Member statistics" : "My Statistics"} items={statistics} />
+      <MemberStatistics
+        data={data}
+        initialAttendance={initialAttendance}
+        minimumAttendance={minimumAttendance}
+        maximumAttendance={maximumAttendance}
+        title={discordUserID ? "Member statistics" : "My Statistics"}
+      />
       {!data || !initialAttendance || minimumAttendance === null || maximumAttendance === null ? (
         <ResourceState state="unavailable" message={t("Personal records could not be loaded.")} />
       ) : null}
