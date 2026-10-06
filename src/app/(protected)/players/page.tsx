@@ -11,7 +11,7 @@ export default async function PlayersPage() {
     <DashboardPage
       title="Player Logs"
       eyebrow="Server presence"
-      description="Players on the CR Roleplay server now, with their Discord and CFX status."
+      description="Players on the CR Roleplay server now, with their Discord and server status."
     >
       <PlayerDirectoryLive initialData={await loadDashboard()} />
     </DashboardPage>

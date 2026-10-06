@@ -11,7 +11,6 @@ export const routes = {
   attendanceRecap: "/attendance-recap",
   attendanceCalendar: "/attendance-calendar",
   payslipRecap: "/payslip-recap",
-  playerSearch: "/player-search",
   moneyTransactions: {
     home: "/money-transactions",
     tabs: {

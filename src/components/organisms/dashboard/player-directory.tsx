@@ -19,45 +19,17 @@ export type CombinedPlayer = {
   serverCID: string;
   serverID?: string;
   serverStatus: ServerStatus;
-  cfxServerID?: number;
-  cfxPing?: number;
-  cfxStatus: CFXStatus;
 };
 
-/**
- * What Discord can see of the member, in the same vocabulary the other two
- * columns use.
- *
- * The activity names the server while a member is joining it and again once
- * they are in, so Discord distinguishes connecting from connected exactly as
- * the game server does, and the column now says which.
- *
- * Everything else is invisible. Discord cannot tell offline from invisible, a
- * member who is online but playing something else is not on this server, and
- * presence the bot could not reach at all reads the same way: from a reader's
- * side all three are the one fact, that Discord is not showing this person on
- * the server. Whether the source itself answered is reported once, by the
- * banner above the table, rather than repeated on every row.
- */
-type DiscordStatus = "connecting" | "connected" | "invisible";
-/**
- * A visit is connecting or connected; once it ends the row leaves the table.
- *
- * "unreported" is the player the CFX roster lists but the webhook never opened
- * a visit for. The game server is on the server; its connect event is what went
- * missing. The row is shown so the table matches the roster, and marked so it
- * is never mistaken for a visit that is earning attendance.
- */
-type ServerStatus = "connecting" | "connected" | "unreported";
-/** Polling means on the server but not yet in the polled CFX directory. */
-type CFXStatus = "connected" | "polling";
+/** Discord reports invisible accounts as offline; missing activity is separate. */
+type DiscordStatus = "connecting" | "connected" | "offline / invisible" | "no CR activity" | "unknown";
+type ServerStatus = "connecting" | "connected";
 
-type PlayerPresenceStatus = DiscordStatus | ServerStatus | CFXStatus;
+type PlayerPresenceStatus = DiscordStatus | ServerStatus;
 
 const statusPriority: Record<ServerStatus, number> = {
   connected: 0,
   connecting: 1,
-  unreported: 2,
 };
 
 export function sortCombinedPlayers(players: CombinedPlayer[]) {
@@ -71,11 +43,9 @@ export function sortCombinedPlayers(players: CombinedPlayer[]) {
 }
 
 export function PlayerDirectory({
-  cfxAvailable = true,
   discordPresenceAvailable = true,
   players,
 }: {
-  cfxAvailable?: boolean;
   discordPresenceAvailable?: boolean;
   players: CombinedPlayer[];
 }) {
@@ -95,18 +65,9 @@ export function PlayerDirectory({
     : players;
   filteredPlayers = sortCombinedPlayers(filteredPlayers);
   const discordConnected = players.filter((player) => player.discordStatus === "connected").length;
-  const cfxConnected = players.filter((player) => player.cfxStatus === "connected").length;
 
   return (
     <>
-      {!cfxAvailable ? (
-        <Alert
-          className="mt-6"
-          type="warning"
-          showIcon
-          title={t("{source} player source is unavailable.", { source: "CFX" })}
-        />
-      ) : null}
       {!discordPresenceAvailable ? (
         <Alert
           className="mt-6"
@@ -123,10 +84,9 @@ export function PlayerDirectory({
             { label: t("Character Name") },
             { key: "discord-status", label: t("Discord Status"), className: "w-56" },
             { key: "server-status", label: t("Server Status"), className: "w-80" },
-            { key: "cfx-status", label: t("CFX Status"), className: "w-40" },
           ]}
           empty={t("No matching players found.")}
-          summary={`${discordConnected} Discord · ${cfxConnected} CFX · ${players.length} total`}
+          summary={`${discordConnected} Discord · ${players.length} total`}
           title={t("Live player log")}
           toolbar={
             <div className="flex flex-wrap items-center gap-3">
@@ -138,7 +98,7 @@ export function PlayerDirectory({
                 density="comfortable"
                 id="combined-player-search"
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder={t("Search character, Discord, or CFX name")}
+                placeholder={t("Search character, Discord, or server name")}
                 type="search"
                 value={query}
               />
@@ -156,7 +116,7 @@ export function PlayerDirectory({
                 </span>
               </DataTableCell>
               <DataTableCell className="font-bold text-[var(--color-foreground)]">{player.characterName}</DataTableCell>
-              {/* Each status cell leads with its pill, so all three start at
+              {/* Each status cell leads with its pill, so both start at
                   their column's left edge and align down the table. Leading
                   with the identifier put every pill at a different x and there
                   was no column of statuses left to scan. The identifier it
@@ -172,14 +132,6 @@ export function PlayerDirectory({
                 <span className="mt-1 block truncate text-[10px] text-[var(--color-foreground-muted)]">
                   {serverIdentity(player) || "-"}
                 </span>
-              </DataTableCell>
-              <DataTableCell>
-                <PlayerStatus status={player.cfxStatus} />
-                {player.cfxStatus === "connected" ? (
-                  <span className="mt-1 block text-[10px] text-[var(--color-foreground-muted)]">
-                    {player.cfxPing}ms
-                  </span>
-                ) : null}
               </DataTableCell>
             </tr>
           ))}
@@ -207,6 +159,7 @@ function serverIdentity(player: CombinedPlayer) {
 
 function PlayerStatus({ status }: { status: PlayerPresenceStatus }) {
   const { translate } = useI18n();
-  const tone = status === "connected" ? "success" : status === "invisible" ? "muted" : "warning";
+  const tone =
+    status === "connected" ? "success" : status === "offline / invisible" || status === "unknown" ? "muted" : "warning";
   return <StatusIndicator tone={tone}>{translate(status)}</StatusIndicator>;
 }

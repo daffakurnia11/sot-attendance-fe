@@ -35,7 +35,6 @@ const menuGroups = [
     items: [
       { href: routes.attendanceTabs.recap, label: "Attendance", icon: "AT" },
       { href: routes.players.home, label: "Player Logs", icon: "PL" },
-      { href: routes.playerSearch, label: "Player Search", icon: "PS", adminOnly: true },
       { href: routes.payslipRecap, label: "Payslip Recap", icon: "PR", adminOnly: true },
     ],
   },

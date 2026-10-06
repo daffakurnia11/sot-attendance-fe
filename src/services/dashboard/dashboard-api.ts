@@ -25,12 +25,6 @@ const playerSchema = z.object({
   total_playtime_seconds: z.number().int().nonnegative(),
 });
 
-const cfxPlayerSchema = z.object({
-  id: z.number().int().nonnegative(),
-  name: z.string(),
-  ping: z.number().int().nonnegative(),
-});
-
 export const dashboardSchema = z.object({
   discord_players: z.array(playerSchema),
   player_threshold: z.number().int().nonnegative(),
@@ -38,9 +32,6 @@ export const dashboardSchema = z.object({
   total_playtime_seconds: z.number().int().nonnegative(),
   total_attended: z.number().int().nonnegative(),
   total_attendances: z.number().int().nonnegative(),
-  cfx_players: z.array(cfxPlayerSchema),
-  all_cfx_players: z.array(cfxPlayerSchema),
-  cfx_available: z.boolean(),
   discord_presence_available: z.boolean(),
 });
 

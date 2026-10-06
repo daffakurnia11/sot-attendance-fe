@@ -27,9 +27,6 @@ const valid = {
   total_playtime_seconds: 5400,
   total_attended: 2,
   total_attendances: 3,
-  cfx_players: [],
-  all_cfx_players: [],
-  cfx_available: true,
   discord_presence_available: true,
 };
 
