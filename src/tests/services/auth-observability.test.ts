@@ -41,4 +41,20 @@ describe("auth observability", () => {
     expect(JSON.parse(output)).toMatchObject({ event: "authjs_error", type: "OAuthCallbackError" });
     expect(output).not.toContain("client secret must never appear");
   });
+
+  it("logs safe identifiers of the wrapped Auth.js cause", () => {
+    const log = vi.fn();
+    const cause = Object.assign(new Error("token abc must never appear"), {
+      name: "ResponseBodyError",
+      error: "invalid_grant",
+      status: 400,
+    });
+    const error = Object.assign(new Error("wrapper"), { type: "CallbackRouteError", cause: { err: cause } });
+
+    logAuthJsError(error, log);
+
+    const output = log.mock.calls[0][0] as string;
+    expect(JSON.parse(output).cause).toEqual({ name: "ResponseBodyError", error: "invalid_grant", status: 400 });
+    expect(output).not.toContain("token abc must never appear");
+  });
 });

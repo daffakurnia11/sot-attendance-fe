@@ -60,6 +60,20 @@ export function logAuthJsError(error: Error, log: AuthLog = console.error) {
       event: "authjs_error",
       reference: createAuthFailureReference(),
       type: typeof typedError.type === "string" ? typedError.type : error.name,
+      cause: safeCause(error),
     }),
   );
+}
+
+// Auth.js wraps the real failure (token exchange, profile fetch) in
+// error.cause.err. Only identifiers are logged: messages can echo secrets.
+function safeCause(error: Error) {
+  const wrapped = (error as Error & { cause?: { err?: unknown } }).cause;
+  const cause = (wrapped?.err ?? wrapped) as Record<string, unknown> | undefined;
+  if (!(cause instanceof Error)) {
+    return undefined;
+  }
+  const text = (value: unknown) => (typeof value === "string" || typeof value === "number" ? value : undefined);
+  const raw = cause as Error & Record<string, unknown>;
+  return { name: cause.name, code: text(raw.code), error: text(raw.error), status: text(raw.status) };
 }
