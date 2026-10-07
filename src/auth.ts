@@ -36,6 +36,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         Discord({
           clientId: serverEnv.AUTH_DISCORD_ID!,
           clientSecret: serverEnv.AUTH_DISCORD_SECRET!,
+          // Discord now appends iss=https://discord.com to the callback
+          // (RFC 9207). Without a matching issuer Auth.js compares it to its
+          // https://authjs.dev fallback and rejects every login.
+          issuer: "https://discord.com",
         }),
       ]
     : [],
