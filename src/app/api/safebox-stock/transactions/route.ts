@@ -11,5 +11,4 @@ export const GET = memberRoute(
     }
     return Response.json(await fetchSafeboxTransactions(goAPIURL, accessToken, safebox));
   },
-  { admin: true },
 );

@@ -43,8 +43,8 @@ const menuGroups = [
     items: [
       { href: routes.craftingCalculator, label: "Crafting Calculator", icon: "CC" },
       { href: routes.moneyTransactions.home, label: "Money Transactions", icon: "MT" },
-      { href: routes.safeboxStock, label: "Safebox Stock", icon: "SS", adminOnly: true },
-      { href: routes.safeboxTransactions, label: "Stock Log", icon: "SL", adminOnly: true },
+      { href: routes.safeboxStock, label: "Safebox Stock", icon: "SS" },
+      { href: routes.safeboxTransactions, label: "Stock Log", icon: "SL" },
     ],
   },
   {

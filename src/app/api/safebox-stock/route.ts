@@ -12,7 +12,6 @@ import {
 export const GET = memberRoute(
   "Safebox stock unavailable",
   async (accessToken) => Response.json(await fetchSafeboxStock(goAPIURL, accessToken)),
-  { admin: true },
 );
 
 export const POST = memberRoute(
