@@ -158,7 +158,9 @@ function TransactionDetail({ entries }: Readonly<{ entries: TransactionEntry[] }
         <span className="block text-[9px] font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
           {t("Reason")}
         </span>
-        <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere] text-sm text-[var(--color-foreground)]">{entry.reason}</p>
+        <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere] text-sm text-[var(--color-foreground)]">
+          {entry.reason}
+        </p>
       </div>
       <div className="p-4">
         <div className="mb-3 flex items-center justify-between">

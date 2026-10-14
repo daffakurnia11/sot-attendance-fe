@@ -9,9 +9,8 @@ import {
   transactSafeboxStock,
 } from "@/services/safebox-stock/safebox-stock-api";
 
-export const GET = memberRoute(
-  "Safebox stock unavailable",
-  async (accessToken) => Response.json(await fetchSafeboxStock(goAPIURL, accessToken)),
+export const GET = memberRoute("Safebox stock unavailable", async (accessToken) =>
+  Response.json(await fetchSafeboxStock(goAPIURL, accessToken)),
 );
 
 export const POST = memberRoute(
