@@ -6,7 +6,7 @@ import { routes } from "@/config/routes";
 import type { MoneyAccount } from "@/services/money-transactions";
 import { loadMoneyTransactions } from "@/services/money-transactions/money-transactions.service.server";
 
-export const metadata: Metadata = { title: "Money Transactions" };
+export const metadata: Metadata = { title: "Money Log" };
 
 export default async function MoneyTransactionsPage({
   searchParams,
@@ -14,7 +14,7 @@ export default async function MoneyTransactionsPage({
   const account: MoneyAccount = (await searchParams).account === "dirty" ? "dirty" : "office";
   return (
     <DashboardPage
-      title="Money Transactions"
+      title="Money Log"
       eyebrow="Business operations"
       description="Office and dirty money balances with complete transaction history."
     >

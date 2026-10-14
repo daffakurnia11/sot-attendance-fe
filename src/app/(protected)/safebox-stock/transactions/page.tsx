@@ -5,7 +5,7 @@ import { DashboardPage } from "@/components/templates";
 import { routes } from "@/config/routes";
 import { loadSafeboxTransactions } from "@/services/safebox-stock/safebox-transactions.service.server";
 
-export const metadata: Metadata = { title: "Safebox Transaction Log" };
+export const metadata: Metadata = { title: "Safebox Log" };
 
 export default async function SafeboxTransactionsPage({
   searchParams,
@@ -13,7 +13,7 @@ export default async function SafeboxTransactionsPage({
   const safebox = (await searchParams).safebox === "boss" ? "boss" : "public";
   return (
     <DashboardPage
-      title="Safebox Transaction Log"
+      title="Safebox Log"
       eyebrow="Business operations"
       description="Review every stock deposit and withdrawal."
     >

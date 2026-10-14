@@ -93,14 +93,14 @@ function TransactionExplorer({ transactions }: Readonly<{ transactions: Transact
               </div>
               <span className="text-[10px] font-bold text-[var(--color-primary-muted)]">{transactions.length}</span>
             </div>
-            <div className="grid max-h-[620px] gap-2 overflow-y-auto pr-1">
+            <div className="grid max-h-[620px] min-w-0 grid-cols-1 auto-rows-max gap-2 overflow-y-auto pr-1">
               {transactions.map((entries) => {
                 const entry = entries[0];
                 const active = entry.id === activeID;
                 return (
                   <button
                     aria-pressed={active}
-                    className={`w-full border p-3 text-left transition-colors ${active ? "border-[var(--color-primary)] bg-[rgba(242,182,61,.09)]" : "border-[var(--color-border)] bg-[rgba(3,3,2,.42)] hover:border-[var(--color-primary-muted)]"}`}
+                    className={`min-w-0 w-full border p-3 text-left transition-colors ${active ? "border-[var(--color-primary)] bg-[rgba(242,182,61,.09)]" : "border-[var(--color-border)] bg-[rgba(3,3,2,.42)] hover:border-[var(--color-primary-muted)]"}`}
                     key={entry.id}
                     onClick={() => setSelectedID(entry.id)}
                     type="button"
@@ -111,7 +111,7 @@ function TransactionExplorer({ transactions }: Readonly<{ transactions: Transact
                         {formatDate(entry.created_at)}
                       </span>
                     </div>
-                    <strong className="mt-2 block truncate text-xs text-[var(--color-foreground)]">
+                    <strong className="mt-2 block whitespace-pre-wrap [overflow-wrap:anywhere] text-xs text-[var(--color-foreground)]">
                       {entry.reason}
                     </strong>
                     <span className="mt-1 block text-[10px] text-[var(--color-foreground-muted)]">
@@ -158,7 +158,7 @@ function TransactionDetail({ entries }: Readonly<{ entries: TransactionEntry[] }
         <span className="block text-[9px] font-extrabold tracking-[.14em] text-[var(--color-primary-muted)] uppercase">
           {t("Reason")}
         </span>
-        <p className="mt-1 text-sm text-[var(--color-foreground)]">{entry.reason}</p>
+        <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere] text-sm text-[var(--color-foreground)]">{entry.reason}</p>
       </div>
       <div className="p-4">
         <div className="mb-3 flex items-center justify-between">
