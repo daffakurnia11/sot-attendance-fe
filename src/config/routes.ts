@@ -19,6 +19,8 @@ export const routes = {
     },
   },
   safeboxStock: "/safebox-stock",
+  priceNotes: "/price-notes",
+  priceManagement: "/price-management",
   safeboxTransactions: "/safebox-stock/transactions",
   craftingCalculator: "/crafting-calculator",
   players: {

@@ -43,6 +43,7 @@ const menuGroups = [
     items: [
       { href: routes.craftingCalculator, label: "Crafting Calculator", icon: "CC" },
       { href: routes.safeboxStock, label: "Safebox Stock", icon: "SS" },
+      { href: routes.priceNotes, label: "Price Notes", icon: "PN" },
     ],
   },
   {
@@ -54,7 +55,10 @@ const menuGroups = [
   },
   {
     label: "System",
-    items: [{ href: routes.settings, label: "Settings", icon: "ST", adminOnly: true }],
+    items: [
+      { href: routes.settings, label: "Settings", icon: "ST", adminOnly: true },
+      { href: routes.priceManagement, label: "Price Management", icon: "PM", adminOnly: true },
+    ],
   },
 ];
 
