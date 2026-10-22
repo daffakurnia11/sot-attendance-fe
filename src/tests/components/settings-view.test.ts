@@ -34,11 +34,21 @@ const stock = {
 };
 
 describe("settings view", () => {
-  it("offers a tab for each settings group", () => {
-    const html = render(createElement(SettingsView, { initialData: settings, safeboxStock: stock }));
-    expect(html).toContain("Attendance settings");
-    expect(html).toContain("Money settings");
-    expect(html).toContain("Safebox stock settings");
+  it("renders only the requested settings section without shared tabs", () => {
+    const attendance = render(
+      createElement(SettingsView, { initialData: settings, safeboxStock: stock, section: "attendance" }),
+    );
+    expect(attendance).toContain("Attendance settings");
+    expect(attendance).not.toContain("Money settings");
+    expect(attendance).not.toContain('role="tab"');
+    const money = render(createElement(SettingsView, { initialData: settings, safeboxStock: stock, section: "money" }));
+    expect(money).toContain("Money settings");
+    expect(money).not.toContain("Attendance starts");
+    const safebox = render(
+      createElement(SettingsView, { initialData: settings, safeboxStock: stock, section: "safebox-stock" }),
+    );
+    expect(safebox).toContain("Iron");
+    expect(safebox).not.toContain("Attendance starts");
   });
 
   it("locks every safebox control for a non-admin so only the server-side gate can be reached", () => {

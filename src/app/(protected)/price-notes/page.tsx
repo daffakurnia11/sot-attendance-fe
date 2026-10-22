@@ -7,7 +7,9 @@ export const metadata: Metadata = { title: "Price Notes" };
 export default async function PriceNotesPage({
   searchParams,
 }: Readonly<{ searchParams: Promise<{ direction?: string }> }>) {
-  const direction = (await searchParams).direction === "sale" ? "sale" : "purchase";
+  const requestedDirection = (await searchParams).direction;
+  const direction =
+    requestedDirection === "sale" || requestedDirection === "internal" ? requestedDirection : "purchase";
   return (
     <DashboardPage
       title="Price Notes"

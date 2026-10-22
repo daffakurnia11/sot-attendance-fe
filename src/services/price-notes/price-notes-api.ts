@@ -10,7 +10,7 @@ export const priceNotesSchema = z.object({
       stock_item_name: z.string().optional(),
       partner_code: z.string(),
       partner_name: z.string(),
-      direction: z.enum(["purchase", "sale"]),
+      direction: z.enum(["purchase", "sale", "internal"]),
       name: z.string(),
       price: z.number().int().nonnegative(),
       unit: z.string(),
@@ -33,7 +33,7 @@ export async function fetchPriceNotes(baseURL: string, accessToken: string, fetc
 
 export const priceUpdateSchema = z.object({
   id: z.number().int().positive(),
-  direction: z.enum(["purchase", "sale"]),
+  direction: z.enum(["purchase", "sale", "internal"]),
   version: z.number().int().positive(),
   price: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
   unit: z.string().trim().min(1).max(50),

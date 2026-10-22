@@ -12,7 +12,9 @@ export default async function PriceManagementPage({
   searchParams,
 }: Readonly<{ searchParams: Promise<{ direction?: string }> }>) {
   if (!(await isAdminSession())) redirect(routes.dashboard);
-  const direction = (await searchParams).direction === "sale" ? "sale" : "purchase";
+  const requestedDirection = (await searchParams).direction;
+  const direction =
+    requestedDirection === "sale" || requestedDirection === "internal" ? requestedDirection : "purchase";
   return (
     <DashboardPage
       title="Price Management"

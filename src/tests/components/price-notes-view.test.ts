@@ -7,7 +7,7 @@ import { PriceNotesView } from "@/components/organisms/price-notes";
 import { I18nProvider } from "@/i18n";
 import type { PriceNotes } from "@/services/price-notes";
 
-function render(initialData: PriceNotes, direction: "purchase" | "sale" = "purchase") {
+function render(initialData: PriceNotes, direction: "purchase" | "sale" | "internal" = "purchase") {
   return renderToStaticMarkup(
     createElement(
       I18nProvider,
@@ -147,4 +147,84 @@ it("orders sale weapons by class instead of alphabetical order", () => {
   expect(ordered.every((position, index) => position >= 0 && (index === 0 || position > ordered[index - 1]))).toBe(
     true,
   );
+});
+
+it("shows internal database prices and packages without partner offers", () => {
+  const html = render(
+    {
+      items: [
+        {
+          id: 1,
+          partner_code: "SOT",
+          partner_name: "SOT Internal",
+          direction: "internal",
+          name: "Vector",
+          price: 8500,
+          unit: "piece",
+          notes: "",
+        },
+        {
+          id: 2,
+          partner_code: "SOT",
+          partner_name: "SOT Internal",
+          direction: "internal",
+          name: "Python",
+          price: 16000,
+          unit: "package",
+          notes: "2 Joint: Free",
+        },
+        {
+          id: 3,
+          partner_code: "BZ",
+          partner_name: "BLADEZAY",
+          direction: "sale",
+          name: "Partner only",
+          price: 1,
+          unit: "piece",
+          notes: "",
+        },
+      ],
+    },
+    "internal",
+  );
+  expect(html).toContain("Member packages");
+  expect(html).toContain("À la carte");
+  expect(html).toContain("8.500");
+  expect(html).toContain("16.000");
+  expect(html).toContain("2 Joint: Free");
+  expect(html).not.toContain("Partner only");
+});
+
+it("groups internal ala carte by stock category, keeping packages separate", () => {
+  const entry = {
+    partner_code: "SOT",
+    partner_name: "SOT Internal",
+    direction: "internal" as const,
+    price: 100,
+    unit: "piece",
+    notes: "",
+  };
+  const html = render(
+    {
+      items: [
+        { ...entry, id: 1, name: "Vector", stock_group: "weapon" },
+        { ...entry, id: 2, name: "Ammo Pistol", stock_group: "ammo" },
+        { ...entry, id: 3, name: "Joint", stock_group: "body_drugs" },
+        { ...entry, id: 4, name: "Body Armor", stock_group: "body_drugs" },
+        { ...entry, id: 5, name: "Package only", unit: "package", stock_group: "weapon" },
+        { ...entry, id: 6, name: "Uncategorized" },
+      ],
+    },
+    "internal",
+  );
+  const headings = ["Weapons", "Ammo", "Body &amp; Drugs", "Other"];
+  const positions = headings.map((name) => html.indexOf(`>${name}</h3>`));
+  expect(positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1]))).toBe(
+    true,
+  );
+  const bodyGroup = html.slice(positions[2], positions[3]);
+  expect(bodyGroup).toContain("Joint");
+  expect(bodyGroup).toContain("Body Armor");
+  expect(bodyGroup).not.toContain("Vector");
+  expect(html.slice(html.indexOf("À la carte"))).not.toContain("Package only");
 });

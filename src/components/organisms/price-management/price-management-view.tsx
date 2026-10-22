@@ -5,23 +5,31 @@ import { useState } from "react";
 import { Button, Field, ResourceState, RouteTabs } from "@/components/atoms";
 import { routes } from "@/config/routes";
 import { useLiveResource } from "@/hooks/use-live-resource";
+import { useI18n } from "@/i18n";
 import { fetchPriceNotesRoute, type PriceNotes, priceUpdateSchema } from "@/services/price-notes";
 export function PriceManagementView({
   initialData,
   direction,
 }: {
   initialData: PriceNotes | null;
-  direction: "purchase" | "sale";
+  direction: "purchase" | "sale" | "internal";
 }) {
   const { data, retry, isLoading, stale, failed } = useLiveResource({
     initialData,
     path: "/api/price-notes",
     fetcher: fetchPriceNotesRoute,
   });
+  const { translate } = useI18n();
+  const [internalGroup, setInternalGroup] = useState("alacarte");
   const [partner, setPartner] = useState("");
   const entries = data?.items.filter((item) => item.direction === direction) ?? [];
   const codes = [...new Set(entries.map((item) => item.partner_code))];
   const selected = codes.includes(partner) ? partner : codes[0];
+  const visibleEntries = entries.filter((item) =>
+    direction === "internal"
+      ? (item.unit === "package") === (internalGroup === "package")
+      : item.partner_code === selected,
+  );
   return (
     <>
       <RouteTabs
@@ -30,6 +38,7 @@ export function PriceManagementView({
         items={[
           { key: "purchase", label: "Partners to SOT", href: `${routes.priceManagement}?direction=purchase` },
           { key: "sale", label: "SOT to Partners", href: `${routes.priceManagement}?direction=sale` },
+          { key: "internal", label: "SOT Internal", href: `${routes.priceManagement}?direction=internal` },
         ]}
       />
       <div className="mt-[var(--space-section)] space-y-4">
@@ -44,28 +53,43 @@ export function PriceManagementView({
             {stale || failed ? (
               <ResourceState state="stale" message="Price notes could not be refreshed." onRetry={() => void retry()} />
             ) : null}
-            <Field label="Partner">
-              <Select
-                aria-label="Partner"
-                className="w-full"
-                value={selected}
-                onChange={setPartner}
-                showSearch={{ optionFilterProp: "label" }}
-                options={codes.map((code) => ({
-                  value: code,
-                  label:
-                    entries.find((item) => item.partner_code === code)?.partner_name === code
-                      ? code
-                      : `${entries.find((item) => item.partner_code === code)?.partner_name} · ${code}`,
-                }))}
-              />
-            </Field>
-            {entries.length === 0 ? (
+            {direction !== "internal" ? (
+              <Field label="Partner">
+                <Select
+                  aria-label="Partner"
+                  className="w-full"
+                  value={selected}
+                  onChange={setPartner}
+                  showSearch={{ optionFilterProp: "label" }}
+                  options={codes.map((code) => ({
+                    value: code,
+                    label:
+                      entries.find((item) => item.partner_code === code)?.partner_name === code
+                        ? code
+                        : `${entries.find((item) => item.partner_code === code)?.partner_name} · ${code}`,
+                  }))}
+                />
+              </Field>
+            ) : (
+              <Field label="Price group">
+                <Select
+                  aria-label={translate("Price group")}
+                  className="w-full"
+                  value={internalGroup}
+                  onChange={setInternalGroup}
+                  options={[
+                    { value: "package", label: translate("Member packages") },
+                    { value: "alacarte", label: translate("À la carte") },
+                  ]}
+                />
+              </Field>
+            )}
+            {visibleEntries.length === 0 ? (
               <ResourceState state="empty" message="No price notes recorded." />
             ) : (
-              entries
-                .filter((item) => item.partner_code === selected)
-                .map((item) => <PriceRow key={`${item.direction}-${item.id}`} item={item} refresh={retry} />)
+              visibleEntries.map((item) => (
+                <PriceRow key={`${item.direction}-${item.id}`} item={item} refresh={retry} />
+              ))
             )}
           </>
         )}
@@ -128,7 +152,10 @@ function PriceRow({ item, refresh }: { item: PriceNotes["items"][number]; refres
     <form onSubmit={save} className="space-y-4 border border-[var(--color-border)] bg-[var(--color-panel-soft)] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-bold">{item.name}</h2>
+          <h2 className="font-bold">
+            {item.name}
+            {item.direction === "internal" ? ` · ${item.unit === "package" ? "Package" : "À la carte"}` : ""}
+          </h2>
           {item.stock_item_name && item.stock_item_name !== item.name ? (
             <p className="text-sm text-[var(--color-foreground-muted)]">{item.stock_item_name}</p>
           ) : null}
@@ -154,7 +181,7 @@ function PriceRow({ item, refresh }: { item: PriceNotes["items"][number]; refres
               required
               maxLength={50}
               value={unit}
-              disabled={busy}
+              disabled={busy || item.direction === "internal"}
               onChange={(e) => setUnit(e.target.value)}
             />
           </Field>

@@ -33,8 +33,8 @@ const menuGroups = [
     // item rather than per group, so the group no longer disappears whole and
     // members keep the two views that are theirs to see.
     items: [
-      { href: routes.attendanceTabs.recap, label: "Attendance", icon: "AT" },
       { href: routes.players.home, label: "Player Logs", icon: "PL" },
+      { href: routes.attendanceTabs.recap, label: "Attendance", icon: "AT" },
       { href: routes.payslipRecap, label: "Payslip Recap", icon: "PR", adminOnly: true },
     ],
   },
@@ -51,12 +51,15 @@ const menuGroups = [
     items: [
       { href: routes.moneyTransactions.home, label: "Money Log", icon: "ML" },
       { href: routes.safeboxTransactions, label: "Safebox Log", icon: "SL" },
+      { href: routes.orderLog, label: "Order Log", icon: "OL" },
     ],
   },
   {
     label: "System",
     items: [
-      { href: routes.settings, label: "Settings", icon: "ST", adminOnly: true },
+      { href: routes.attendanceSettings, label: "Attendance settings", icon: "AS", adminOnly: true },
+      { href: routes.moneySettings, label: "Money settings", icon: "MS", adminOnly: true },
+      { href: routes.safeboxSettings, label: "Safebox stock settings", icon: "SS", adminOnly: true },
       { href: routes.priceManagement, label: "Price Management", icon: "PM", adminOnly: true },
     ],
   },

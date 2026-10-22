@@ -19,6 +19,7 @@ export const routes = {
     },
   },
   safeboxStock: "/safebox-stock",
+  orderLog: "/order-log",
   priceNotes: "/price-notes",
   priceManagement: "/price-management",
   safeboxTransactions: "/safebox-stock/transactions",
@@ -33,6 +34,9 @@ export const routes = {
     cfx: "/players/cfx",
   },
   settings: "/settings",
+  attendanceSettings: "/settings/attendance",
+  moneySettings: "/settings/money",
+  safeboxSettings: "/settings/safebox-stock",
   auth: {
     error: "/",
     discordCallback: "/api/auth/callback/discord",

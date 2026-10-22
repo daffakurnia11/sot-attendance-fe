@@ -3,7 +3,7 @@
 import { Alert, Input } from "antd";
 import { useState } from "react";
 
-import { Button, Field, FormSection, PanelTabs, ResourceState } from "@/components/atoms";
+import { Button, Field, FormSection, ResourceState } from "@/components/atoms";
 import { useI18n } from "@/i18n";
 import type { SafeboxStock } from "@/services/safebox-stock";
 import type { SettingsData } from "@/services/settings";
@@ -11,7 +11,11 @@ import { formatIDRInput, normalizeCurrencyInput, settingsSchema, settingsValuesS
 
 import { SafeboxStockSettings } from "./safebox-stock-settings";
 
-type Props = Readonly<{ initialData: SettingsData | null; safeboxStock: SafeboxStock | null }>;
+type Props = Readonly<{
+  initialData: SettingsData | null;
+  safeboxStock: SafeboxStock | null;
+  section?: "attendance" | "money" | "safebox-stock";
+}>;
 
 const fields = [
   {
@@ -64,7 +68,7 @@ const fields = [
   },
 ] as const;
 
-export function SettingsView({ initialData, safeboxStock }: Props) {
+export function SettingsView({ initialData, safeboxStock, section = "attendance" }: Props) {
   const [values, setValues] = useState<SettingsData | null>(initialData);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -114,164 +118,156 @@ export function SettingsView({ initialData, safeboxStock }: Props) {
     }
   }
 
-  return (
-    <PanelTabs
-      label="Settings sections"
-      items={[
-        {
-          key: "attendance",
-          label: "Attendance settings",
-          children: (
-            <FormSection
-              title={<>{t("Attendance settings")}</>}
-              description={
-                <>
-                  {values.is_admin
-                    ? t("Values stored in settings table.")
-                    : t("Read-only. Administrator role required to edit.")}
-                </>
-              }
-              footer={
-                <>
-                  <div aria-live="polite">
-                    {feedback ? <Alert type={feedback.type} showIcon title={feedback.message} /> : null}
-                  </div>
-                  <Button
-                    loading={saving}
-                    disabled={saving || !values.is_admin}
-                    onClick={() => save("attendance")}
-                    className="h-11 px-6 font-extrabold uppercase"
-                  >
-                    {values.is_admin ? t("Save settings") : t("Admin required")}
-                  </Button>
-                </>
-              }
-            >
-              {fields.map((field) => (
-                <Field key={field.key} label={<>{translate(field.label)}</>} help={<>{translate(field.help)}</>}>
-                  <Input
-                    className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
-                    disabled={!values.is_admin}
-                    inputMode={
-                      ["payment_contract", "attendance_minimum", "attendance_maximum", "start_date_contract"].includes(
-                        field.key,
-                      )
-                        ? "numeric"
-                        : undefined
-                    }
-                    prefix={field.key === "payment_contract" ? "Rp." : undefined}
-                    suffix={
-                      ["attendance_minimum", "attendance_maximum"].includes(field.key)
-                        ? t("days/month")
-                        : field.key === "start_date_contract"
-                          ? t("day of month")
-                          : undefined
-                    }
-                    value={field.key === "payment_contract" ? formatIDRInput(values[field.key]) : values[field.key]}
-                    placeholder={field.placeholder}
-                    onChange={(event) =>
-                      setValues((current) =>
-                        current
-                          ? {
-                              ...current,
-                              [field.key]:
-                                field.key === "payment_contract"
-                                  ? normalizeCurrencyInput(event.target.value)
-                                  : event.target.value,
-                            }
-                          : current,
-                      )
-                    }
-                  />
-                </Field>
-              ))}
-            </FormSection>
-          ),
-        },
-        {
-          key: "money",
-          label: "Money settings",
-          children: (
-            <FormSection
-              title={<>{t("Money settings")}</>}
-              description={<>{t("Current office and dirty money balances.")}</>}
-              footer={
-                <>
-                  <div aria-live="polite">
-                    {moneyFeedback ? <Alert type={moneyFeedback.type} showIcon title={moneyFeedback.message} /> : null}
-                  </div>
-                  <Button
-                    loading={saving}
-                    disabled={saving || !values.is_admin}
-                    onClick={() => save("money")}
-                    className="h-11 px-6 font-extrabold uppercase"
-                  >
-                    {values.is_admin ? t("Save money") : t("Admin required")}
-                  </Button>
-                </>
-              }
-            >
-              <Field
-                label={<>{t("Office money")}</>}
-                help={
-                  <>
-                    {values.is_admin
-                      ? t("Administrator may correct current office balance.")
-                      : t("Read-only. Administrator role required to edit.")}
-                  </>
-                }
+  const sections = [
+    {
+      key: "attendance",
+      label: "Attendance settings",
+      children: (
+        <FormSection
+          title={<>{t("Attendance settings")}</>}
+          description={
+            <>
+              {values.is_admin
+                ? t("Values stored in settings table.")
+                : t("Read-only. Administrator role required to edit.")}
+            </>
+          }
+          footer={
+            <>
+              <div aria-live="polite">
+                {feedback ? <Alert type={feedback.type} showIcon title={feedback.message} /> : null}
+              </div>
+              <Button
+                loading={saving}
+                disabled={saving || !values.is_admin}
+                onClick={() => save("attendance")}
+                className="h-11 px-6 font-extrabold uppercase"
               >
-                <Input
-                  aria-label={t("Current office money balance")}
-                  className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
-                  disabled={!values.is_admin}
-                  inputMode="numeric"
-                  prefix="$"
-                  value={formatIDRInput(values.office_money_balance)}
-                  onChange={(event) =>
-                    setValues((current) =>
-                      current
-                        ? { ...current, office_money_balance: normalizeCurrencyInput(event.target.value) }
-                        : current,
-                    )
-                  }
-                />
-              </Field>
-              <Field
-                label={<>{t("Dirty money")}</>}
-                help={
-                  <>
-                    {values.is_admin
-                      ? t("Administrator may correct current dirty money balance.")
-                      : t("Read-only. Administrator role required to edit.")}
-                  </>
+                {values.is_admin ? t("Save settings") : t("Admin required")}
+              </Button>
+            </>
+          }
+        >
+          {fields.map((field) => (
+            <Field key={field.key} label={<>{translate(field.label)}</>} help={<>{translate(field.help)}</>}>
+              <Input
+                className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
+                disabled={!values.is_admin}
+                inputMode={
+                  ["payment_contract", "attendance_minimum", "attendance_maximum", "start_date_contract"].includes(
+                    field.key,
+                  )
+                    ? "numeric"
+                    : undefined
                 }
+                prefix={field.key === "payment_contract" ? "Rp." : undefined}
+                suffix={
+                  ["attendance_minimum", "attendance_maximum"].includes(field.key)
+                    ? t("days/month")
+                    : field.key === "start_date_contract"
+                      ? t("day of month")
+                      : undefined
+                }
+                value={field.key === "payment_contract" ? formatIDRInput(values[field.key]) : values[field.key]}
+                placeholder={field.placeholder}
+                onChange={(event) =>
+                  setValues((current) =>
+                    current
+                      ? {
+                          ...current,
+                          [field.key]:
+                            field.key === "payment_contract"
+                              ? normalizeCurrencyInput(event.target.value)
+                              : event.target.value,
+                        }
+                      : current,
+                  )
+                }
+              />
+            </Field>
+          ))}
+        </FormSection>
+      ),
+    },
+    {
+      key: "money",
+      label: "Money settings",
+      children: (
+        <FormSection
+          title={<>{t("Money settings")}</>}
+          description={<>{t("Current office and dirty money balances.")}</>}
+          footer={
+            <>
+              <div aria-live="polite">
+                {moneyFeedback ? <Alert type={moneyFeedback.type} showIcon title={moneyFeedback.message} /> : null}
+              </div>
+              <Button
+                loading={saving}
+                disabled={saving || !values.is_admin}
+                onClick={() => save("money")}
+                className="h-11 px-6 font-extrabold uppercase"
               >
-                <Input
-                  aria-label={t("Current dirty money balance")}
-                  className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
-                  disabled={!values.is_admin}
-                  inputMode="numeric"
-                  prefix="$"
-                  value={formatIDRInput(values.dirty_money_balance)}
-                  onChange={(event) =>
-                    setValues((current) =>
-                      current
-                        ? { ...current, dirty_money_balance: normalizeCurrencyInput(event.target.value) }
-                        : current,
-                    )
-                  }
-                />
-              </Field>
-            </FormSection>
-          ),
-        },
-        {
-          key: "safebox-stock",
-          label: "Safebox stock settings",
-          children: <SafeboxStockSettings initialData={safeboxStock} isAdmin={values.is_admin} />,
-        },
-      ]}
-    />
-  );
+                {values.is_admin ? t("Save money") : t("Admin required")}
+              </Button>
+            </>
+          }
+        >
+          <Field
+            label={<>{t("Office money")}</>}
+            help={
+              <>
+                {values.is_admin
+                  ? t("Administrator may correct current office balance.")
+                  : t("Read-only. Administrator role required to edit.")}
+              </>
+            }
+          >
+            <Input
+              aria-label={t("Current office money balance")}
+              className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
+              disabled={!values.is_admin}
+              inputMode="numeric"
+              prefix="$"
+              value={formatIDRInput(values.office_money_balance)}
+              onChange={(event) =>
+                setValues((current) =>
+                  current ? { ...current, office_money_balance: normalizeCurrencyInput(event.target.value) } : current,
+                )
+              }
+            />
+          </Field>
+          <Field
+            label={<>{t("Dirty money")}</>}
+            help={
+              <>
+                {values.is_admin
+                  ? t("Administrator may correct current dirty money balance.")
+                  : t("Read-only. Administrator role required to edit.")}
+              </>
+            }
+          >
+            <Input
+              aria-label={t("Current dirty money balance")}
+              className="h-11 border-[var(--color-border)] bg-[var(--color-control-background)] px-3 text-base"
+              disabled={!values.is_admin}
+              inputMode="numeric"
+              prefix="$"
+              value={formatIDRInput(values.dirty_money_balance)}
+              onChange={(event) =>
+                setValues((current) =>
+                  current ? { ...current, dirty_money_balance: normalizeCurrencyInput(event.target.value) } : current,
+                )
+              }
+            />
+          </Field>
+        </FormSection>
+      ),
+    },
+    {
+      key: "safebox-stock",
+      label: "Safebox stock settings",
+      children: <SafeboxStockSettings initialData={safeboxStock} isAdmin={values.is_admin} />,
+    },
+  ];
+  return <div className="mt-[var(--space-section)]">{sections.find((item) => item.key === section)?.children}</div>;
 }

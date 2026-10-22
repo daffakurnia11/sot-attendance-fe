@@ -5,12 +5,15 @@ import { useLiveResource } from "@/hooks/use-live-resource";
 import { useI18n } from "@/i18n";
 import { fetchPriceNotesRoute, type PriceNotes } from "@/services/price-notes";
 import { stockGroups } from "@/services/safebox-stock";
+
+import { InternalPrices } from "./internal-prices";
+
 export function PriceNotesView({
   initialData,
   direction = "purchase",
 }: {
   initialData: PriceNotes | null;
-  direction?: "purchase" | "sale";
+  direction?: "purchase" | "sale" | "internal";
 }) {
   const { translate } = useI18n();
   const { data, isLoading, stale, failed, retry } = useLiveResource({
@@ -40,6 +43,7 @@ export function PriceNotesView({
         items={[
           { key: "purchase", label: "Partners to SOT", href: `${routes.priceNotes}?direction=purchase` },
           { key: "sale", label: "SOT to Partners", href: `${routes.priceNotes}?direction=sale` },
+          { key: "internal", label: "SOT Internal", href: `${routes.priceNotes}?direction=internal` },
         ]}
       />
       <div className="mt-[var(--space-section)] space-y-6">
@@ -54,7 +58,9 @@ export function PriceNotesView({
             {stale || failed ? (
               <ResourceState state="stale" message="Price notes could not be refreshed." onRetry={() => void retry()} />
             ) : null}
-            {groupKeys.length === 0 ? (
+            {direction === "internal" ? (
+              <InternalPrices items={entries} />
+            ) : groupKeys.length === 0 ? (
               <ResourceState state="empty" message="No price notes recorded." />
             ) : (
               groupKeys.map((key) => {
